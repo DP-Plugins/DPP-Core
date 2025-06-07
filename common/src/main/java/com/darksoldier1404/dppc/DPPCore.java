@@ -12,7 +12,6 @@ import com.earth2me.essentials.Essentials;
 import com.sk89q.worldguard.WorldGuard;
 import net.luckperms.api.LuckPerms;
 import org.bukkit.Bukkit;
-import org.bukkit.Material;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -89,8 +88,6 @@ public class DPPCore extends JavaPlugin {
         getCommand("dppca").setExecutor(new DPPCACommand());
         getCommand("dppcp").setExecutor(new DPPCPCommand());
         getServer().getPluginManager().registerEvents(new ActionGUIHandler(), this);
-        Material m = Material.matchMaterial("BARRIER");
-        m.asBlockType();
     }
 
     @Override
