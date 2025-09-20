@@ -1,6 +1,6 @@
 package com.darksoldier1404.dppc.plugin.commands;
 
-import com.darksoldier1404.dppc.lang.DLang;
+import com.darksoldier1404.dppc.DPPCore;
 import com.darksoldier1404.dppc.utils.PluginUtil;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -44,7 +44,7 @@ public class DPPCCommand implements CommandExecutor, TabCompleter {
         }
         if (args[0].equalsIgnoreCase("lang")) {
             if (args.length == 2) {
-                DLang.setCurrentLang(Locale.forLanguageTag(args[1]));
+                DPPCore.plugin.getLang().setCurrentLang(Locale.forLanguageTag(args[1]));
                 sender.sendMessage("§aLanguage changed to: " + args[1]);
                 return true;
             } else {

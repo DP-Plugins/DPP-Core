@@ -1,5 +1,6 @@
 package com.darksoldier1404.dppc.lang;
 
+import com.darksoldier1404.dppc.utils.ColorUtils;
 import com.darksoldier1404.dppc.utils.ConfigUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -12,22 +13,22 @@ import java.util.Locale;
 import java.util.Set;
 
 public class DLang {
-    private static final Set<DLangContext> langContexts = new HashSet<>();
-    public static Locale currentLang = Locale.forLanguageTag("en-US");
+    private final Set<DLangContext> langContexts = new HashSet<>();
+    public Locale currentLang = Locale.forLanguageTag("en-US");
 
-    public static Set<DLangContext> getLangContexts() {
+    public Set<DLangContext> getLangContexts() {
         return langContexts;
     }
 
-    public static void setCurrentLang(Locale lang) {
+    public void setCurrentLang(Locale lang) {
         currentLang = lang;
     }
 
-    public static Locale getCurrentLang() {
+    public Locale getCurrentLang() {
         return currentLang;
     }
 
-    public static void initPluginLang(JavaPlugin plugin) {
+    public void initPluginLang(JavaPlugin plugin) {
         File f = new File(plugin.getDataFolder() + "/lang", "en_US.yml");
         if (!f.exists()) {
             plugin.saveResource("lang/en_US.yml", false);
@@ -42,7 +43,7 @@ public class DLang {
         });
     }
 
-    public static void loadDefaultLangFiles(JavaPlugin plugin, YamlConfiguration data, String fileName) {
+    public void loadDefaultLangFiles(JavaPlugin plugin, YamlConfiguration data, String fileName) {
         DLangContext context = new DLangContext(plugin, Locale.forLanguageTag(fileName.split("\\.")[0].replace("_", "-")));
         for (String key : data.getKeys(false)) {
             String value = data.getString(key);
@@ -59,9 +60,8 @@ public class DLang {
         langContexts.add(context);
     }
 
-    public static String find(String key) {
+    public String find(String key) {
         for (DLangContext context : langContexts) {
-            System.out.println(currentLang + " vs " + context.getLang());
             if (context.getLang().getLanguage().equals(currentLang.getLanguage())) {
                 if (context.hasValue(key)) {
                     return context.getValue(key);
@@ -72,16 +72,16 @@ public class DLang {
     }
 
     @NotNull
-    public static String get(String key) {
-        return find(key);
+    public String get(String key) {
+        return ColorUtils.applyColor(find(key));
     }
 
     @NotNull
-    public static String getWithArgs(String key, String... args) {
+    public String getWithArgs(String key, String... args) {
         String s = find(key);
         for (int i = 0; i < args.length; i++) {
             s = s.replace("{" + i + "}", args[i]);
         }
-        return ChatColor.translateAlternateColorCodes('&', s);
+        return ColorUtils.applyColor(s);
     }
 }
