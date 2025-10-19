@@ -16,7 +16,7 @@ import java.util.logging.Logger;
 
 public class LuckpermAPI {
     private static final DPPCore plugin = DPPCore.getInstance();
-    private static final LuckPerms lp = (LuckPerms) plugin.lp;
+    private static final LuckPerms lp = (LuckPerms) DPPCore.lp;
     private static final String PREFIX = "[DPP-Core.LuckpermAPI] ";
     private static final String MSG_USER_NOT_FOUND = PREFIX + "User not found.";
     private static final Logger logger = plugin.getLogger();

@@ -2,6 +2,7 @@ package com.darksoldier1404.dppc.api.inventory;
 
 import com.darksoldier1404.dppc.annotation.DPPCoreVersion;
 import com.darksoldier1404.dppc.annotation.MultiPageOnly;
+import com.darksoldier1404.dppc.data.DPlugin;
 import com.darksoldier1404.dppc.utils.DInventoryManager;
 import com.darksoldier1404.dppc.utils.NBT;
 import org.bukkit.Bukkit;
@@ -13,7 +14,6 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
@@ -21,12 +21,12 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-@SuppressWarnings("unused")
+@DPPCoreVersion(since = "5.3.0")
 public class DInventory implements InventoryHolder, Cloneable {
     private Inventory inventory;
     private String handlerName;
     private final String title;
-    private JavaPlugin plugin;
+    private @NotNull DPlugin plugin;
     private String name;
     private UUID uuid;
     private boolean usePage;
@@ -41,7 +41,7 @@ public class DInventory implements InventoryHolder, Cloneable {
     private final int contentSlots; // 페이지 콘텐츠용 슬롯 수
     private final int toolSlots; // 페이지 도구용 슬롯 수
 
-    public DInventory(String title, int size, JavaPlugin plugin) {
+    public DInventory(String title, int size, DPlugin plugin) {
         this.title = title;
         this.inventory = Bukkit.createInventory(this, size, title);
         this.handlerName = plugin.getName();
@@ -56,7 +56,7 @@ public class DInventory implements InventoryHolder, Cloneable {
         DInventoryManager.addInventory(plugin, this);
     }
 
-    public DInventory(String title, int size, boolean usePage, JavaPlugin plugin) {
+    public DInventory(String title, int size, boolean usePage, DPlugin plugin) {
         this.title = title;
         this.inventory = Bukkit.createInventory(this, size, title);
         this.handlerName = plugin.getName();
@@ -71,7 +71,7 @@ public class DInventory implements InventoryHolder, Cloneable {
         DInventoryManager.addInventory(plugin, this);
     }
 
-    public DInventory(String title, int size, boolean usePage, boolean useDefaultPageTools, JavaPlugin plugin) {
+    public DInventory(String title, int size, boolean usePage, boolean useDefaultPageTools, DPlugin plugin) {
         this.title = title;
         this.inventory = Bukkit.createInventory(this, size, title);
         this.handlerName = plugin.getName();
@@ -95,7 +95,7 @@ public class DInventory implements InventoryHolder, Cloneable {
     }
 
     @Override
-    public Inventory getInventory() {
+    public @NotNull Inventory getInventory() {
         return inventory;
     }
 
@@ -670,6 +670,10 @@ public class DInventory implements InventoryHolder, Cloneable {
 
     public org.bukkit.Location getLocation() {
         return inventory.getLocation();
+    }
+
+    public @NotNull DPlugin getPlugin() {
+        return plugin;
     }
 
     public static class PageItemSet {

@@ -1,8 +1,10 @@
 package com.darksoldier1404.dppc.builder.action.helper;
 
+import com.darksoldier1404.dppc.annotation.DPPCoreVersion;
 import com.darksoldier1404.dppc.builder.action.ActionBuilder;
 import com.darksoldier1404.dppc.builder.action.obj.ActionType;
 import com.darksoldier1404.dppc.api.inventory.DInventory;
+import com.darksoldier1404.dppc.data.DPlugin;
 import com.darksoldier1404.dppc.utils.NBT;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -12,8 +14,9 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Arrays;
 
+@DPPCoreVersion(since = "5.3.0")
 public class ActionGUI {
-    private final JavaPlugin plugin;
+    private final DPlugin plugin;
     private ActionBuilder actionBuilder;
 
     public ActionGUI(ActionBuilder actionBuilder) {
@@ -21,7 +24,7 @@ public class ActionGUI {
         this.actionBuilder = actionBuilder;
     }
 
-    public ActionGUI(JavaPlugin plugin, String actionName) {
+    public ActionGUI(DPlugin plugin, String actionName) {
         this.plugin = plugin;
         this.actionBuilder = new ActionBuilder(plugin, actionName);
     }

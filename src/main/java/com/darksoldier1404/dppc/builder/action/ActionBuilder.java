@@ -1,7 +1,9 @@
 package com.darksoldier1404.dppc.builder.action;
 
+import com.darksoldier1404.dppc.annotation.DPPCoreVersion;
 import com.darksoldier1404.dppc.builder.action.actions.*;
 import com.darksoldier1404.dppc.builder.action.obj.Action;
+import com.darksoldier1404.dppc.data.DPlugin;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -9,20 +11,21 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.util.ArrayList;
 import java.util.List;
 
+@DPPCoreVersion(since = "5.3.0")
 @SuppressWarnings("all")
 public class ActionBuilder {
-    private final JavaPlugin plugin;
+    private final DPlugin plugin;
     private final List<Action> actions = new ArrayList<>();
     private String actionName;
     private boolean isEditing = false;
     private int currentEditIndex = 0;
 
-    public ActionBuilder(JavaPlugin plugin, String actionName) {
+    public ActionBuilder(DPlugin plugin, String actionName) {
         this.plugin = plugin;
         this.actionName = actionName;
     }
 
-    public JavaPlugin getPlugin() {
+    public DPlugin getPlugin() {
         return plugin;
     }
 
@@ -53,7 +56,7 @@ public class ActionBuilder {
     private void update(Action a) {
         if (isEditing) {
             if (currentEditIndex >= actions.size()) {
-                plugin.getLogger().warning("Invalid index for editing action.");
+                plugin.getLog().warning("Invalid index for editing action.", true);
                 isEditing = false;
                 return;
             }
@@ -118,7 +121,7 @@ public class ActionBuilder {
             if (action != null) {
                 actions.add(action);
             } else {
-                plugin.getLogger().warning("Invalid action: " + line);
+                plugin.getLog().warning("Invalid action: " + line, true);
             }
         }
         return this;
@@ -171,12 +174,12 @@ public class ActionBuilder {
     }
 
     private static class ActionExecutor {
-        private final JavaPlugin plugin;
+        private final DPlugin plugin;
         private final List<Action> actions;
         private final Player player;
         private int currentIndex = 0;
 
-        ActionExecutor(JavaPlugin plugin, List<Action> actions, Player player) {
+        ActionExecutor(DPlugin plugin, List<Action> actions, Player player) {
             this.plugin = plugin;
             this.actions = new ArrayList<Action>(actions);
             this.player = player;
@@ -204,7 +207,7 @@ public class ActionBuilder {
                             scheduleNextAction(0);
                         }
                     } catch (Exception e) {
-                        plugin.getLogger().severe("Error in ActionExecutor: " + e.getMessage());
+                        plugin.getLog().severe("Error in ActionExecutor: " + e.getMessage(), true);
                     }
                 }
             }, delay);

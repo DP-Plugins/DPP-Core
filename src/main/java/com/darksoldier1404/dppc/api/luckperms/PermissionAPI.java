@@ -13,7 +13,7 @@ import java.util.UUID;
 
 public class PermissionAPI {
     private final static DPPCore plugin = DPPCore.getInstance();
-    private static final LuckPerms lp = (LuckPerms) plugin.lp;
+    private static final LuckPerms lp = (LuckPerms) DPPCore.lp;
     private static final String prefix = "[DPP-Core.PermissionAPI] ";
 
     public static boolean isPlayerInGroup(Player player, String group) {

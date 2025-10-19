@@ -1,15 +1,15 @@
 package com.darksoldier1404.dppc.data;
 
 import com.darksoldier1404.dppc.annotation.DPPCoreVersion;
+import com.darksoldier1404.dppc.api.logger.DLogManager;
+import com.darksoldier1404.dppc.api.logger.DLogNode;
 import com.darksoldier1404.dppc.utils.ConfigUtils;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.logging.Logger;
 
 /**
  * A type-safe container for managing data in a Bukkit plugin, extending HashMap.
@@ -23,9 +23,9 @@ import java.util.logging.Logger;
  */
 @DPPCoreVersion(since = "5.3.0")
 public class DataContainer<K, V> extends HashMap<K, V> implements IDataHandler<K, V> {
-    private final JavaPlugin plugin;
+    private final DPlugin plugin;
     private final DataType dataType;
-    private final Logger logger;
+    private final DLogNode logger;
     private String path;
 
     /**
@@ -34,11 +34,11 @@ public class DataContainer<K, V> extends HashMap<K, V> implements IDataHandler<K
      * @param plugin   The JavaPlugin instance.
      * @param dataType The type of data to manage (USER, YAML, or CUSTOM).
      */
-    public DataContainer(JavaPlugin plugin, DataType dataType) {
+    public DataContainer(DPlugin plugin, DataType dataType) {
         super();
         this.plugin = plugin;
         this.dataType = dataType;
-        this.logger = plugin.getLogger();
+        this.logger = plugin.getLog();
         this.path = dataType == DataType.USER ? "udata" : "data";
     }
 
@@ -49,12 +49,12 @@ public class DataContainer<K, V> extends HashMap<K, V> implements IDataHandler<K
      * @param dataType The type of data to manage (USER, YAML, or CUSTOM).
      * @param path     The custom directory path for data storage.
      */
-    public DataContainer(JavaPlugin plugin, DataType dataType, String path) {
+    public DataContainer(DPlugin plugin, DataType dataType, String path) {
         this(plugin, dataType);
         this.path = path != null ? path : this.path;
     }
 
-    public JavaPlugin getPlugin() {
+    public DPlugin getPlugin() {
         return plugin;
     }
 
@@ -138,21 +138,21 @@ public class DataContainer<K, V> extends HashMap<K, V> implements IDataHandler<K
         try {
             fileName = getFileName(key);
         } catch (IllegalArgumentException e) {
-            logger.warning(e.getMessage());
+            logger.warning(e.getMessage(), DLogManager.printDataContainerLogs);
             return;
         }
         V value = get(key);
         try {
             validateValue(value, key);
         } catch (IllegalArgumentException e) {
-            logger.warning(e.getMessage());
+            logger.warning(e.getMessage(), DLogManager.printDataContainerLogs);
             return;
         }
         String savePath = path;
         if (dataType == DataType.CUSTOM) {
             Object serialized = ((DataCargo) value).serialize();
             if (!(serialized instanceof YamlConfiguration)) {
-                logger.warning("Serialized data is not a YamlConfiguration for key: " + key);
+                logger.warning("Serialized data is not a YamlConfiguration for key: " + key, DLogManager.printDataContainerLogs);
                 return;
             }
             ConfigUtils.saveCustomData(plugin, (YamlConfiguration) serialized, fileName, savePath);
@@ -172,20 +172,20 @@ public class DataContainer<K, V> extends HashMap<K, V> implements IDataHandler<K
             try {
                 fileName = getFileName(key);
             } catch (IllegalArgumentException e) {
-                logger.warning(e.getMessage());
+                logger.warning(e.getMessage(), DLogManager.printDataContainerLogs);
                 continue;
             }
             V value = entry.getValue();
             try {
                 validateValue(value, key);
             } catch (IllegalArgumentException e) {
-                logger.warning(e.getMessage());
+                logger.warning(e.getMessage(), DLogManager.printDataContainerLogs);
                 continue;
             }
             if (dataType == DataType.CUSTOM) {
                 Object serialized = ((DataCargo) value).serialize();
                 if (!(serialized instanceof YamlConfiguration)) {
-                    logger.warning("Serialized data is not a YamlConfiguration for key: " + key);
+                    logger.warning("Serialized data is not a YamlConfiguration for key: " + key, DLogManager.printDataContainerLogs);
                     continue;
                 }
                 ConfigUtils.saveCustomData(plugin, (YamlConfiguration) serialized, fileName, savePath);
@@ -222,7 +222,7 @@ public class DataContainer<K, V> extends HashMap<K, V> implements IDataHandler<K
         try {
             fileName = getFileName(key);
         } catch (IllegalArgumentException e) {
-            logger.warning(e.getMessage());
+            logger.warning(e.getMessage(), DLogManager.printDataContainerLogs);
             return this;
         }
         String loadPath = path;
@@ -232,7 +232,7 @@ public class DataContainer<K, V> extends HashMap<K, V> implements IDataHandler<K
         }
         if (dataType == DataType.CUSTOM) {
             if (!DataCargo.class.isAssignableFrom(clazz)) {
-                logger.warning("Class " + clazz.getSimpleName() + " does not implement DataCargo for key " + key);
+                logger.warning("Class " + clazz.getSimpleName() + " does not implement DataCargo for key " + key, DLogManager.printDataContainerLogs);
                 return this;
             }
             try {
@@ -241,10 +241,10 @@ public class DataContainer<K, V> extends HashMap<K, V> implements IDataHandler<K
                 if (clazz.isInstance(value)) {
                     put(key, (V) value);
                 } else {
-                    logger.warning("Type mismatch on load for key " + key + ": Value not compatible with " + clazz.getSimpleName());
+                    logger.warning("Type mismatch on load for key " + key + ": Value not compatible with " + clazz.getSimpleName(), DLogManager.printDataContainerLogs);
                 }
             } catch (Exception e) {
-                logger.warning("Failed to load CUSTOM data for key " + key + " in " + clazz.getSimpleName() + ": " + e.getMessage());
+                logger.warning("Failed to load CUSTOM data for key " + key + " in " + clazz.getSimpleName() + ": " + e.getMessage(), DLogManager.printDataContainerLogs);
             }
         } else {
             put(key, (V) data);
@@ -263,11 +263,11 @@ public class DataContainer<K, V> extends HashMap<K, V> implements IDataHandler<K
         HashMap<String, YamlConfiguration> dataMap = ConfigUtils.loadCustomDataMap(plugin, loadPath);
         if (dataType == DataType.CUSTOM) {
             if (clazz == null) {
-                logger.warning("Class parameter is null for CUSTOM data type.");
+                logger.warning("Class parameter is null for CUSTOM data type.", DLogManager.printDataContainerLogs);
                 return this;
             }
             if (!DataCargo.class.isAssignableFrom(clazz)) {
-                logger.warning("Class " + clazz.getSimpleName() + " does not implement DataCargo.");
+                logger.warning("Class " + clazz.getSimpleName() + " does not implement DataCargo.", DLogManager.printDataContainerLogs);
                 return this;
             }
         }
@@ -294,15 +294,15 @@ public class DataContainer<K, V> extends HashMap<K, V> implements IDataHandler<K
                     if (clazz.isInstance(value)) {
                         put(key, (V) value);
                     } else {
-                        logger.warning("Type mismatch on loadAll for key " + strKey + ": Value not compatible with " + clazz.getSimpleName());
+                        logger.warning("Type mismatch on loadAll for key " + strKey + ": Value not compatible with " + clazz.getSimpleName(), DLogManager.printDataContainerLogs);
                     }
                 } else {
                     put(key, (V) data);
                 }
             } catch (IllegalArgumentException e) {
-                logger.warning("Invalid UUID format for USER key: " + strKey);
+                logger.warning("Invalid UUID format for USER key: " + strKey, DLogManager.printDataContainerLogs);
             } catch (Exception e) {
-                logger.warning("Failed to load data for key " + strKey + (clazz != null ? " in " + clazz.getSimpleName() : "") + ": " + e.getMessage());
+                logger.warning("Failed to load data for key " + strKey + (clazz != null ? " in " + clazz.getSimpleName() : "") + ": " + e.getMessage(), DLogManager.printDataContainerLogs);
             }
         }
         return this;

@@ -1,13 +1,14 @@
 package com.darksoldier1404.dppc.data;
 
 import com.darksoldier1404.dppc.annotation.DPPCoreVersion;
+import com.darksoldier1404.dppc.api.logger.DLogManager;
+import com.darksoldier1404.dppc.api.logger.DLogNode;
 import com.darksoldier1404.dppc.utils.ConfigUtils;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
-import java.util.logging.Logger;
 
 /**
  * A type-safe container for managing a single piece of data in a Bukkit plugin.
@@ -22,9 +23,9 @@ import java.util.logging.Logger;
  */
 @DPPCoreVersion(since = "5.3.0")
 public class SingleDataContainer<K, V> implements IDataHandler<K, V> {
-    private final JavaPlugin plugin;
+    private final DPlugin plugin;
     private final DataType dataType;
-    private final Logger logger;
+    private final DLogNode logger;
     private String path;
     private K key;
     private V value;
@@ -35,10 +36,10 @@ public class SingleDataContainer<K, V> implements IDataHandler<K, V> {
      * @param plugin   The JavaPlugin instance.
      * @param dataType The type of data to manage (USER, YAML, or CUSTOM).
      */
-    public SingleDataContainer(JavaPlugin plugin, DataType dataType) {
+    public SingleDataContainer(DPlugin plugin, DataType dataType) {
         this.plugin = plugin;
         this.dataType = dataType;
-        this.logger = plugin.getLogger();
+        this.logger = plugin.getLog();
         this.path = dataType == DataType.USER ? "udata" : "data";
         this.key = null;
         this.value = null;
@@ -51,7 +52,7 @@ public class SingleDataContainer<K, V> implements IDataHandler<K, V> {
      * @param dataType The type of data to manage (USER, YAML, or CUSTOM).
      * @param path     The custom directory path for data storage.
      */
-    public SingleDataContainer(JavaPlugin plugin, DataType dataType, String path) {
+    public SingleDataContainer(DPlugin plugin, DataType dataType, String path) {
         this(plugin, dataType);
         this.path = path != null ? path : this.path;
     }
@@ -98,7 +99,7 @@ public class SingleDataContainer<K, V> implements IDataHandler<K, V> {
             this.key = key;
             this.value = value;
         } catch (IllegalArgumentException e) {
-            logger.warning(e.getMessage());
+            logger.warning(e.getMessage(), DLogManager.printDataContainerLogs);
             this.key = null;
             this.value = null;
         }
@@ -177,27 +178,27 @@ public class SingleDataContainer<K, V> implements IDataHandler<K, V> {
      */
     public void save() {
         if (key == null || value == null) {
-            logger.warning("Cannot save: Key or value is null");
+            logger.warning("Cannot save: Key or value is null", DLogManager.printDataContainerLogs);
             return;
         }
         String fileName;
         try {
             fileName = getFileName(key);
         } catch (IllegalArgumentException e) {
-            logger.warning(e.getMessage());
+            logger.warning(e.getMessage(), DLogManager.printDataContainerLogs);
             return;
         }
         try {
             validateValue(value, key);
         } catch (IllegalArgumentException e) {
-            logger.warning(e.getMessage());
+            logger.warning(e.getMessage(), DLogManager.printDataContainerLogs);
             return;
         }
         String savePath = path;
         if (dataType == DataType.CUSTOM) {
             Object serialized = ((DataCargo) value).serialize();
             if (!(serialized instanceof YamlConfiguration)) {
-                logger.warning("Serialized data is not a YamlConfiguration for key: " + key);
+                logger.warning("Serialized data is not a YamlConfiguration for key: " + key, DLogManager.printDataContainerLogs);
                 return;
             }
             ConfigUtils.saveCustomData(plugin, (YamlConfiguration) serialized, fileName, savePath);
@@ -234,7 +235,7 @@ public class SingleDataContainer<K, V> implements IDataHandler<K, V> {
         try {
             fileName = getFileName(key);
         } catch (IllegalArgumentException e) {
-            logger.warning(e.getMessage());
+            logger.warning(e.getMessage(), DLogManager.printDataContainerLogs);
             return this;
         }
         String loadPath = path;
@@ -245,7 +246,7 @@ public class SingleDataContainer<K, V> implements IDataHandler<K, V> {
         }
         if (dataType == DataType.CUSTOM) {
             if (!DataCargo.class.isAssignableFrom(clazz)) {
-                logger.warning("Class " + clazz.getSimpleName() + " does not implement DataCargo for key " + key);
+                logger.warning("Class " + clazz.getSimpleName() + " does not implement DataCargo for key " + key, DLogManager.printDataContainerLogs);
                 return this;
             }
             try {
@@ -254,11 +255,11 @@ public class SingleDataContainer<K, V> implements IDataHandler<K, V> {
                 if (clazz.isInstance(loadedValue)) {
                     this.value = (V) loadedValue;
                 } else {
-                    logger.warning("Type mismatch on load for key " + key + ": Value not compatible with " + clazz.getSimpleName());
+                    logger.warning("Type mismatch on load for key " + key + ": Value not compatible with " + clazz.getSimpleName(), DLogManager.printDataContainerLogs);
                     this.value = null;
                 }
             } catch (Exception e) {
-                logger.warning("Failed to load CUSTOM data for key " + key + " in " + clazz.getSimpleName() + ": " + e.getMessage());
+                logger.warning("Failed to load CUSTOM data for key " + key + " in " + clazz.getSimpleName() + ": " + e.getMessage(), DLogManager.printDataContainerLogs);
                 this.value = null;
             }
         } else {
@@ -294,7 +295,7 @@ public class SingleDataContainer<K, V> implements IDataHandler<K, V> {
         if (hasData()) {
             load(key, clazz);
         } else {
-            logger.warning("Cannot loadAll: No key set for SingleDataContainer with path '" + path + "'");
+            logger.warning("Cannot loadAll: No key set for SingleDataContainer with path '" + path + "'", DLogManager.printDataContainerLogs);
         }
         return this;
     }

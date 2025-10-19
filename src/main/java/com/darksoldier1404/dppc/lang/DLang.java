@@ -1,10 +1,10 @@
 package com.darksoldier1404.dppc.lang;
 
+import com.darksoldier1404.dppc.annotation.DPPCoreVersion;
+import com.darksoldier1404.dppc.data.DPlugin;
 import com.darksoldier1404.dppc.utils.ColorUtils;
 import com.darksoldier1404.dppc.utils.ConfigUtils;
-import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -12,6 +12,7 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
 
+@DPPCoreVersion(since = "5.3.0")
 public class DLang {
     private final Set<DLangContext> langContexts = new HashSet<>();
     public Locale currentLang = Locale.forLanguageTag("en-US");
@@ -28,7 +29,7 @@ public class DLang {
         return currentLang;
     }
 
-    public void initPluginLang(JavaPlugin plugin) {
+    public void initPluginLang(DPlugin plugin) {
         File f = new File(plugin.getDataFolder() + "/lang", "en_US.yml");
         if (!f.exists()) {
             plugin.saveResource("lang/en_US.yml", false);
@@ -38,23 +39,23 @@ public class DLang {
             try {
                 loadDefaultLangFiles(plugin, data, name);
             } catch (Exception e) {
-                plugin.getLogger().warning("[DLang] Error loading lang file: " + data.getName());
+                plugin.getLog().warning("[DLang] Error loading lang file: " + data.getName(), true);
             }
         });
     }
 
-    public void loadDefaultLangFiles(JavaPlugin plugin, YamlConfiguration data, String fileName) {
+    public void loadDefaultLangFiles(DPlugin plugin, YamlConfiguration data, String fileName) {
         DLangContext context = new DLangContext(plugin, Locale.forLanguageTag(fileName.split("\\.")[0].replace("_", "-")));
         for (String key : data.getKeys(false)) {
             String value = data.getString(key);
             if (value != null) {
                 if (context.hasValue(key)) {
-                    plugin.getLogger().warning("Language key '" + key + "' already exists in the context.");
+                    plugin.getLog().warning("Language key '" + key + "' already exists in the context.", true);
                 } else {
                     context.initDefaultValues(key, value);
                 }
             } else {
-                plugin.getLogger().warning("Language key '" + key + "' has no value in the configuration file. Please ensure it is set correctly.");
+                plugin.getLog().warning("Language key '" + key + "' has no value in the configuration file. Please ensure it is set correctly.", true);
             }
         }
         langContexts.add(context);

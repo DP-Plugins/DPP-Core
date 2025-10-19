@@ -1,5 +1,7 @@
 package com.darksoldier1404.dppc.builder.command;
 
+import com.darksoldier1404.dppc.annotation.DPPCoreVersion;
+import com.darksoldier1404.dppc.api.logger.DLogManager;
 import com.darksoldier1404.dppc.data.DPlugin;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -17,6 +19,7 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+@DPPCoreVersion(since = "5.3.0")
 public class CommandBuilder implements CommandExecutor, TabCompleter {
     private final Map<String, SubCommand> subCommands = new HashMap<>();
     private final DPlugin plugin;
@@ -50,6 +53,10 @@ public class CommandBuilder implements CommandExecutor, TabCompleter {
                 sender.sendMessage(noSubCommandsMessage);
             }
         };
+    }
+
+    public void build(@NotNull String command) {
+        plugin.getCommand(command).setExecutor(this);
     }
 
     public void addSubCommand(String name, String usage, BiFunction<CommandSender, String[], Boolean> action) {
@@ -92,6 +99,22 @@ public class CommandBuilder implements CommandExecutor, TabCompleter {
         this.noSubCommandsMessage = message;
     }
 
+    public Map<String, SubCommand> getSubCommands() {
+        return subCommands;
+    }
+
+    public DPlugin getPlugin() {
+        return plugin;
+    }
+
+    public BiConsumer<CommandSender, String[]> getDefaultAction() {
+        return defaultAction;
+    }
+
+    public String getNoSubCommandsMessage() {
+        return noSubCommandsMessage;
+    }
+
     private static class SubCommand {
         private final String name;
         private final String permission; // Nullable for no permission check
@@ -112,13 +135,43 @@ public class CommandBuilder implements CommandExecutor, TabCompleter {
         public void setTabCompletion(Function<String[], List<String>> tabCompletion) {
             this.tabCompletion = tabCompletion;
         }
+
         public void setTabCompletionWithSender(BiFunction<CommandSender, String[], List<String>> tabCompletionWithSender) {
             this.tabCompletionWithSender = tabCompletionWithSender;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public String getPermission() {
+            return permission;
+        }
+
+        public String getUsage() {
+            return usage;
+        }
+
+        public boolean isPlayerOnly() {
+            return isPlayerOnly;
+        }
+
+        public BiFunction<CommandSender, String[], Boolean> getAction() {
+            return action;
+        }
+
+        public Function<String[], List<String>> getTabCompletion() {
+            return tabCompletion;
+        }
+
+        public BiFunction<CommandSender, String[], List<String>> getTabCompletionWithSender() {
+            return tabCompletionWithSender;
         }
     }
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
+        plugin.getLog().info("Command executed: " + command.getName() + " by " + sender.getName() + " with args: " + String.join(", ", args), DLogManager.printCommandLogs);
         if (args.length == 0) {
             defaultAction.accept(sender, args);
             return false;
@@ -140,7 +193,7 @@ public class CommandBuilder implements CommandExecutor, TabCompleter {
             return false;
         }
 
-        if(!subCommand.action.apply(sender, args)) {
+        if (!subCommand.action.apply(sender, args)) {
             sender.sendMessage(plugin.getPrefix() + "Usage: " + subCommand.usage);
         }
         return false;

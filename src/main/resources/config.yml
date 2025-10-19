@@ -3,3 +3,13 @@ Settings:
   Lang: en_US
 
   prefix: "&f[ &bDPP-Core &f] "
+
+  Log: # Settings for DP-Plugins logging system.
+    save_period: 3600  # Time in seconds to save the log file.
+    save_integrated: true  # If true, integrated logs will be saved in a single file.
+    save_separated: true  # If true, separated logs will be saved in individual files at each plugin folder.
+    print_ConfigUtils_Debug: true  # If true, ConfigUtils debug messages will be printed to the console.
+    print_Command_Debug: false  # If true, Command debug messages will be printed to the console.
+    print_DInventory_Debug: false  # If true, DInventory debug messages will be printed to the console.
+    print_DataContainer_Debug: true  # If true, DataContainer debug messages will be printed to the console.
+    print_PluginUtils_Debug: true  # If true, PluginUtils debug messages will be printed to the console.

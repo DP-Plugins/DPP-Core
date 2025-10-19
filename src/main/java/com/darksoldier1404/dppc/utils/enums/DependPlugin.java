@@ -6,5 +6,5 @@ public enum DependPlugin {
     PlaceholderAPI,
     WorldGuard,
     ProtocolLib,
-    Vault;
+    Vault
 }

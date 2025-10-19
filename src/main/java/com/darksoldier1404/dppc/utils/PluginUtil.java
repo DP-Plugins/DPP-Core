@@ -1,6 +1,7 @@
 package com.darksoldier1404.dppc.utils;
 
 import com.darksoldier1404.dppc.DPPCore;
+import com.darksoldier1404.dppc.api.logger.DLogManager;
 import com.darksoldier1404.dppc.api.placeholder.PlaceholderBuilder;
 import com.darksoldier1404.dppc.builder.action.ActionBuilder;
 import com.darksoldier1404.dppc.utils.enums.DependPlugin;
@@ -57,7 +58,7 @@ public class PluginUtil {
             if (pl != null) {
                 if (isMetricsEnabled(pl.getName())) {
                     new Metrics((JavaPlugin) pl, loadedPlugins.get(pl));
-                    DPPCore.getInstance().log.info(pl.getName() + " plugin metrics enabled.");
+                    DPPCore.getInstance().log.info(pl.getName() + " plugin metrics enabled.", DLogManager.printPluginUtilsLogs);
                 }
             }
         }
@@ -67,7 +68,7 @@ public class PluginUtil {
         for (YamlConfiguration raw : ConfigUtils.loadCustomDataList(plugin, "actions")) {
             String actionName = raw.getString("ACTION_NAME");
             if (actionName == null) {
-                plugin.getLogger().warning("Action name is null. Skipping...");
+                plugin.getLog().warning("Action name is null. Skipping...", DLogManager.printPluginUtilsLogs);
                 continue;
             }
             plugin.actions.put(actionName, new ActionBuilder(plugin, actionName).importFromYaml(raw));
@@ -83,11 +84,11 @@ public class PluginUtil {
         if (dependPlugins.contains(DependPlugin.PlaceholderAPI)) {
             for (PlaceholderBuilder.InternalExpansion pb : plugin.placeholders) {
                 pb.register();
-                plugin.getLogger().info("PlaceholderAPI registered: " + pb.getIdentifier());
+                plugin.getLog().info("PlaceholderAPI registered: " + pb.getIdentifier(), DLogManager.printPluginUtilsLogs);
             }
         } else {
-            plugin.getLogger().warning("PlaceholderAPI plugin is not installed.");
-            plugin.getLogger().warning("PlaceholderAPI is disabled.");
+            plugin.getLog().warning("PlaceholderAPI plugin is not installed.", DLogManager.printPluginUtilsLogs);
+            plugin.getLog().warning("PlaceholderAPI is disabled.", DLogManager.printPluginUtilsLogs);
         }
     }
 
@@ -106,8 +107,8 @@ public class PluginUtil {
     public static Plugin getPluginInstance(String pluginName, String apiName, DependPlugin dependPlugin) {
         Plugin instance = getServer().getPluginManager().getPlugin(pluginName);
         if (instance == null) {
-            plugin.getLogger().warning(pluginName + " plugin is not installed.");
-            plugin.getLogger().warning(apiName + " is disabled.");
+            plugin.getLog().warning(pluginName + " plugin is not installed.", DLogManager.printPluginUtilsLogs);
+            plugin.getLog().warning(apiName + " is disabled.", DLogManager.printPluginUtilsLogs);
             return null;
         }
         dependPlugins.add(dependPlugin);
@@ -119,12 +120,12 @@ public class PluginUtil {
     public static <T> T getPluginInstance(String pluginName, Class<T> pluginClass, String apiName) {
         Plugin instance = getServer().getPluginManager().getPlugin(pluginName);
         if (instance == null) {
-            plugin.getLogger().warning(pluginName + " plugin is not installed.");
-            plugin.getLogger().warning(apiName + " is disabled.");
+            plugin.getLog().warning(pluginName + " plugin is not installed.", DLogManager.printPluginUtilsLogs);
+            plugin.getLog().warning(apiName + " is disabled.", DLogManager.printPluginUtilsLogs);
             return null;
         }
         if (!pluginClass.isInstance(instance)) {
-            plugin.getLogger().warning(pluginName + " plugin does not match the required class.");
+            plugin.getLog().warning(pluginName + " plugin does not match the required class.", DLogManager.printPluginUtilsLogs);
             return null;
         }
         return pluginClass.cast(instance);
@@ -134,8 +135,8 @@ public class PluginUtil {
     public static LuckPerms getLuckPermsInstance() {
         Plugin lpPlugin = getServer().getPluginManager().getPlugin("LuckPerms");
         if (lpPlugin == null) {
-            plugin.getLogger().warning("LuckPerms plugin is not installed.");
-            plugin.getLogger().warning("PermissionAPI is disabled.");
+            plugin.getLog().warning("LuckPerms plugin is not installed.", DLogManager.printPluginUtilsLogs);
+            plugin.getLog().warning("PermissionAPI is disabled.", DLogManager.printPluginUtilsLogs);
             return null;
         }
         return LuckPermsProvider.get();
@@ -145,8 +146,8 @@ public class PluginUtil {
     public static WorldGuard getWorldGuardInstance() {
         Plugin wgPlugin = getServer().getPluginManager().getPlugin("WorldGuard");
         if (wgPlugin == null) {
-            plugin.getLogger().warning("WorldGuard plugin is not installed.");
-            plugin.getLogger().warning("WorldGuardAPI is disabled.");
+            plugin.getLog().warning("WorldGuard plugin is not installed.", DLogManager.printPluginUtilsLogs);
+            plugin.getLog().warning("WorldGuardAPI is disabled.", DLogManager.printPluginUtilsLogs);
             return null;
         }
         return WorldGuard.getInstance();
@@ -172,7 +173,7 @@ public class PluginUtil {
 
                     int responseCode = connection.getResponseCode();
                     if (responseCode != HttpURLConnection.HTTP_OK) {
-                        plugin.getLogger().warning("Warning: Unable to get version data for " + pluginName + ". HTTP Response Code: " + responseCode);
+                        plugin.getLog().warning("Warning: Unable to get version data for " + pluginName + ". HTTP Response Code: " + responseCode, DLogManager.printPluginUtilsLogs);
                         future.complete("0.0.0");
                         return;
                     }
@@ -187,14 +188,14 @@ public class PluginUtil {
                         JsonObject jsonObject = JsonParser.parseString(response.toString()).getAsJsonObject();
                         JsonObject releases = jsonObject.getAsJsonObject("releases");
                         if (releases == null || !releases.has(pluginName)) {
-                            plugin.getLogger().warning("Warning: Plugin " + pluginName + " not found in API response.");
+                            plugin.getLog().warning("Warning: Plugin " + pluginName + " not found in API response.", DLogManager.printPluginUtilsLogs);
                             future.complete("0.0.0");
                             return;
                         }
 
                         JsonArray pluginReleases = releases.getAsJsonArray(pluginName);
                         if (pluginReleases.isEmpty()) {
-                            plugin.getLogger().warning("Warning: No releases found for plugin " + pluginName);
+                            plugin.getLog().warning("Warning: No releases found for plugin " + pluginName, DLogManager.printPluginUtilsLogs);
                             future.complete("0.0.0");
                             return;
                         }
@@ -204,7 +205,7 @@ public class PluginUtil {
                         future.complete(Objects.requireNonNull(tag, "0.0.0"));
                     }
                 } catch (Exception e) {
-                    plugin.getLogger().warning("Error fetching version for " + pluginName + ": " + e.getMessage());
+                    plugin.getLog().warning("Error fetching version for " + pluginName + ": " + e.getMessage(), DLogManager.printPluginUtilsLogs);
                     e.printStackTrace();
                     future.complete("0.0.0");
                 }
@@ -213,7 +214,7 @@ public class PluginUtil {
         try {
             return future.get(10, TimeUnit.SECONDS);
         } catch (Exception e) {
-            plugin.getLogger().warning("Error waiting for version result for " + pluginName + ": " + e.getMessage());
+            plugin.getLog().warning("Error waiting for version result for " + pluginName + ": " + e.getMessage(), DLogManager.printPluginUtilsLogs);
             e.printStackTrace();
             return "0.0.0";
         }
@@ -235,7 +236,7 @@ public class PluginUtil {
                 }
             }
         } catch (NumberFormatException e) {
-            plugin.getLogger().warning("Error comparing versions: " + e.getMessage());
+            plugin.getLog().warning("Error comparing versions: " + e.getMessage(), DLogManager.printPluginUtilsLogs);
             return false;
         }
         return false;
