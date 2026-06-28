@@ -4,7 +4,9 @@ import com.darksoldier1404.dppc.DPPCore;
 import com.darksoldier1404.dppc.builder.command.ArgumentIndex;
 import com.darksoldier1404.dppc.builder.command.ArgumentType;
 import com.darksoldier1404.dppc.builder.command.CommandBuilder;
+import com.darksoldier1404.dppc.plugin.functions.DPPCPFunction;
 import com.darksoldier1404.dppc.utils.PluginUtil;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.stream.Collectors;
@@ -14,6 +16,19 @@ public class DPPCPCommand {
     private final CommandBuilder builder = new CommandBuilder(plugin);
 
     public DPPCPCommand() {
+        // Bare "/dppcp" opens the GUI information panel.
+        builder.setDefaultAction((sender, args) -> {
+            if (!(sender instanceof Player)) {
+                sender.sendMessage(plugin.getPrefix() + "§cThis command can only be used by players.");
+                return;
+            }
+            if (!sender.hasPermission("dppc.admin")) {
+                sender.sendMessage(plugin.getPrefix() + "§cYou do not have permission to use this command.");
+                return;
+            }
+            DPPCPFunction.openDPPListGUI((Player) sender);
+        });
+
         builder.beginSubCommand("info", "/dppcp info <PluginName>")
                 .withPermission("dppc.admin")
                 .withArgument(ArgumentIndex.ARG_0, ArgumentType.STRING)

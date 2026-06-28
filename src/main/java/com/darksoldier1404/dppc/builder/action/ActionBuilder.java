@@ -198,20 +198,54 @@ public class ActionBuilder {
         return this;
     }
 
-    // --- Variables ---
+    // --- Variables (Temporary) ---
 
-    public ActionBuilder setVariable(String name, String value) {
-        update(new SetVariableAction(name, value));
+    public ActionBuilder setTempVariable(String name, String value) {
+        update(new SetTempVariableAction(name, value));
         return this;
     }
 
-    public ActionBuilder addVariable(String name, double amount) {
-        update(new AddVariableAction(name, amount));
+    public ActionBuilder addTempVariable(String name, double amount) {
+        update(new AddTempVariableAction(name, amount));
         return this;
     }
 
-    public ActionBuilder randomNumber(String name, int min, int max) {
-        update(new RandomNumberAction(name, min, max));
+    public ActionBuilder randomTempNumber(String name, int min, int max) {
+        update(new RandomTempNumberAction(name, min, max));
+        return this;
+    }
+
+    // --- Variables (Player) ---
+
+    public ActionBuilder setPlayerVariable(String name, String value) {
+        update(new SetPlayerVariableAction(name, value));
+        return this;
+    }
+
+    public ActionBuilder addPlayerVariable(String name, double amount) {
+        update(new AddPlayerVariableAction(name, amount));
+        return this;
+    }
+
+    public ActionBuilder randomPlayerNumber(String name, int min, int max) {
+        update(new RandomPlayerNumberAction(name, min, max));
+        return this;
+    }
+
+    // --- Variables (Global) ---
+
+    public ActionBuilder setGlobalVariable(String name, String value) {
+        update(new SetGlobalVariableAction(name, value));
+        return this;
+    }
+
+    public ActionBuilder addGlobalVariable(String name, double amount) {
+        update(new AddGlobalVariableAction(name, amount));
+        return this;
+    }
+
+    public ActionBuilder randomGlobalNumber(String name, int min, int max) {
+        update(new RandomGlobalNumberAction(name, min, max));
         return this;
     }
 
@@ -227,23 +261,63 @@ public class ActionBuilder {
         return this;
     }
 
-    public ActionBuilder ifVariableEquals(String name, String value) {
-        update(new IfVariableEqualsAction(name, value));
+    public ActionBuilder ifTempVariableEquals(String name, String value) {
+        update(new IfTempVariableEqualsAction(name, value));
         return this;
     }
 
-    public ActionBuilder ifVariableNotEquals(String name, String value) {
-        update(new IfVariableNotEqualsAction(name, value));
+    public ActionBuilder ifTempVariableNotEquals(String name, String value) {
+        update(new IfTempVariableNotEqualsAction(name, value));
         return this;
     }
 
-    public ActionBuilder ifVariableGreater(String name, double threshold) {
-        update(new IfVariableGreaterAction(name, threshold));
+    public ActionBuilder ifTempVariableGreater(String name, double threshold) {
+        update(new IfTempVariableGreaterAction(name, threshold));
         return this;
     }
 
-    public ActionBuilder ifVariableLess(String name, double threshold) {
-        update(new IfVariableLessAction(name, threshold));
+    public ActionBuilder ifTempVariableLess(String name, double threshold) {
+        update(new IfTempVariableLessAction(name, threshold));
+        return this;
+    }
+
+    public ActionBuilder ifPlayerVariableEquals(String name, String value) {
+        update(new IfPlayerVariableEqualsAction(name, value));
+        return this;
+    }
+
+    public ActionBuilder ifPlayerVariableNotEquals(String name, String value) {
+        update(new IfPlayerVariableNotEqualsAction(name, value));
+        return this;
+    }
+
+    public ActionBuilder ifPlayerVariableGreater(String name, double threshold) {
+        update(new IfPlayerVariableGreaterAction(name, threshold));
+        return this;
+    }
+
+    public ActionBuilder ifPlayerVariableLess(String name, double threshold) {
+        update(new IfPlayerVariableLessAction(name, threshold));
+        return this;
+    }
+
+    public ActionBuilder ifGlobalVariableEquals(String name, String value) {
+        update(new IfGlobalVariableEqualsAction(name, value));
+        return this;
+    }
+
+    public ActionBuilder ifGlobalVariableNotEquals(String name, String value) {
+        update(new IfGlobalVariableNotEqualsAction(name, value));
+        return this;
+    }
+
+    public ActionBuilder ifGlobalVariableGreater(String name, double threshold) {
+        update(new IfGlobalVariableGreaterAction(name, threshold));
+        return this;
+    }
+
+    public ActionBuilder ifGlobalVariableLess(String name, double threshold) {
+        update(new IfGlobalVariableLessAction(name, threshold));
         return this;
     }
 
@@ -317,15 +391,29 @@ public class ActionBuilder {
         if ((a = ClearEffectsAction.parse(line)) != null) return a;
         if ((a = GiveItemAction.parse(line)) != null) return a;
         if ((a = TakeItemAction.parse(line)) != null) return a;
-        if ((a = SetVariableAction.parse(line)) != null) return a;
-        if ((a = AddVariableAction.parse(line)) != null) return a;
-        if ((a = RandomNumberAction.parse(line)) != null) return a;
+        if ((a = SetTempVariableAction.parse(line)) != null) return a;
+        if ((a = AddTempVariableAction.parse(line)) != null) return a;
+        if ((a = RandomTempNumberAction.parse(line)) != null) return a;
+        if ((a = SetPlayerVariableAction.parse(line)) != null) return a;
+        if ((a = AddPlayerVariableAction.parse(line)) != null) return a;
+        if ((a = RandomPlayerNumberAction.parse(line)) != null) return a;
+        if ((a = SetGlobalVariableAction.parse(line)) != null) return a;
+        if ((a = AddGlobalVariableAction.parse(line)) != null) return a;
+        if ((a = RandomGlobalNumberAction.parse(line)) != null) return a;
         if ((a = IfHasPermissionAction.parse(line)) != null) return a;
         if ((a = IfNotPermissionAction.parse(line)) != null) return a;
-        if ((a = IfVariableEqualsAction.parse(line)) != null) return a;
-        if ((a = IfVariableNotEqualsAction.parse(line)) != null) return a;
-        if ((a = IfVariableGreaterAction.parse(line)) != null) return a;
-        if ((a = IfVariableLessAction.parse(line)) != null) return a;
+        if ((a = IfTempVariableEqualsAction.parse(line)) != null) return a;
+        if ((a = IfTempVariableNotEqualsAction.parse(line)) != null) return a;
+        if ((a = IfTempVariableGreaterAction.parse(line)) != null) return a;
+        if ((a = IfTempVariableLessAction.parse(line)) != null) return a;
+        if ((a = IfPlayerVariableEqualsAction.parse(line)) != null) return a;
+        if ((a = IfPlayerVariableNotEqualsAction.parse(line)) != null) return a;
+        if ((a = IfPlayerVariableGreaterAction.parse(line)) != null) return a;
+        if ((a = IfPlayerVariableLessAction.parse(line)) != null) return a;
+        if ((a = IfGlobalVariableEqualsAction.parse(line)) != null) return a;
+        if ((a = IfGlobalVariableNotEqualsAction.parse(line)) != null) return a;
+        if ((a = IfGlobalVariableGreaterAction.parse(line)) != null) return a;
+        if ((a = IfGlobalVariableLessAction.parse(line)) != null) return a;
         if ((a = ElseAction.parse(line)) != null) return a;
         if ((a = EndIfAction.parse(line)) != null) return a;
         if ((a = CancelAction.parse(line)) != null) return a;

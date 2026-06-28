@@ -37,6 +37,11 @@ public class PluginUtil {
     private static final DPPCore plugin = DPPCore.getInstance();
     private static final Map<JavaPlugin, Integer> loadedPlugins = new HashMap<>();
     private static final Set<DependPlugin> dependPlugins = new HashSet<>();
+    // Cache of the latest known version per plugin name, populated by update checks.
+    // "0.0.0" means the version could not be verified (API failure / plugin not listed).
+    private static final Map<String, String> latestVersionCache = new java.util.concurrent.ConcurrentHashMap<>();
+    // Base of each plugin's GitHub page; the plugin name is appended to form the full URL.
+    private static final String GITHUB_BASE = "https://github.com/DP-Plugins/";
 
     public static void addPlugin(JavaPlugin plugin, int id) {
         loadedPlugins.put(plugin, id);
@@ -259,11 +264,69 @@ public class PluginUtil {
         });
     }
 
+    /**
+     * @return the cached latest version for the plugin, or {@code null} if it has not been checked yet.
+     */
+    @Nullable
+    public static String getCachedLatestVersion(String name) {
+        return latestVersionCache.get(name);
+    }
+
+    /** @return the plugin's GitHub page URL ({@code https://github.com/DP-Plugins/<pluginName>}). */
+    public static String getGithubUrl(String pluginName) {
+        return GITHUB_BASE + pluginName;
+    }
+
+    /** @return true once at least one plugin's latest version has been fetched into the cache. */
+    public static boolean hasCachedVersions() {
+        return !latestVersionCache.isEmpty();
+    }
+
+    /**
+     * Seeds the latest-version cache. Mainly useful for tests; production code populates the cache
+     * through {@link #checkUpdateAsync} / {@link #checkAllUpdatesAsync}.
+     */
+    public static void cacheLatestVersion(String name, String version) {
+        if (name != null && version != null) {
+            latestVersionCache.put(name, version);
+        }
+    }
+
+    /**
+     * Asynchronously fetches and caches the latest version for one plugin, then runs {@code onComplete}
+     * back on the main server thread (if not null).
+     */
+    public static void checkUpdateAsync(String name, Runnable onComplete) {
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            latestVersionCache.put(name, getLatestVersion(name));
+            if (onComplete != null) {
+                Bukkit.getScheduler().runTask(plugin, onComplete);
+            }
+        });
+    }
+
+    /**
+     * Asynchronously fetches and caches the latest version for every registered plugin, then runs
+     * {@code onComplete} back on the main server thread (if not null).
+     */
+    public static void checkAllUpdatesAsync(Runnable onComplete) {
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            for (JavaPlugin pl : loadedPlugins.keySet()) {
+                if (pl == null) continue;
+                latestVersionCache.put(pl.getName(), getLatestVersion(pl.getName()));
+            }
+            if (onComplete != null) {
+                Bukkit.getScheduler().runTask(plugin, onComplete);
+            }
+        });
+    }
+
     public static void updateCheck(CommandSender sender) {
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             for (JavaPlugin plugin : loadedPlugins.keySet()) {
                 String latestVersion = getLatestVersion(plugin.getName());
                 if (latestVersion != null) {
+                    latestVersionCache.put(plugin.getName(), latestVersion);
                     String currentVersion = plugin.getDescription().getVersion();
                     if (isNewVersion(currentVersion, latestVersion)) {
                         sender.sendMessage("§f[ §bDPP-Core §f] §e" + plugin.getName() + " §f| §cA new version of " + plugin.getName() + " is available: " + latestVersion + ". You are running version " + currentVersion);
@@ -271,6 +334,7 @@ public class PluginUtil {
                     } else {
                         sender.sendMessage("§f[ §bDPP-Core §f] §e" + plugin.getName() + " §f| §aYou are running the latest version §f(§a" + currentVersion + "§f)");
                     }
+                    sender.sendMessage("§fGitHub: §e" + getGithubUrl(plugin.getName()));
                 }
             }
         });
@@ -284,6 +348,7 @@ public class PluginUtil {
             }
             String latestVersion = getLatestVersion(name);
             if (latestVersion != null) {
+                latestVersionCache.put(name, latestVersion);
                 JavaPlugin plugin = loadedPlugins.keySet().stream().filter(p -> p.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
                 String currentVersion = plugin.getDescription().getVersion();
                 if (isNewVersion(currentVersion, latestVersion)) {
@@ -292,6 +357,7 @@ public class PluginUtil {
                 } else {
                     sender.sendMessage("§f[ §bDPP-Core §f] §e" + name + " §f| §aYou are running the latest version §f(§a" + currentVersion + "§f)");
                 }
+                sender.sendMessage("§fGitHub: §e" + getGithubUrl(name));
             }
         });
     }

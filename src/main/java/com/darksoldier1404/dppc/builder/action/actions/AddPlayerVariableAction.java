@@ -4,11 +4,11 @@ import com.darksoldier1404.dppc.builder.action.obj.Action;
 import com.darksoldier1404.dppc.builder.action.obj.ActionContext;
 import com.darksoldier1404.dppc.builder.action.obj.ActionType;
 
-public class AddVariableAction implements Action {
+public class AddPlayerVariableAction implements Action {
     private final String name;
     private final double amount;
 
-    public AddVariableAction(String name, double amount) {
+    public AddPlayerVariableAction(String name, double amount) {
         this.name = name;
         this.amount = amount;
     }
@@ -16,32 +16,32 @@ public class AddVariableAction implements Action {
     @Override
     public void execute(ActionContext context) {
         try {
-            double current = Double.parseDouble(context.getVariable(name));
+            double current = Double.parseDouble(context.getPlayerVariable(name));
             double result = current + amount;
             String formatted = result == (long) result
                     ? String.valueOf((long) result)
                     : String.valueOf(result);
-            context.setVariable(name, formatted);
+            context.setPlayerVariable(name, formatted);
         } catch (NumberFormatException e) {
-            context.setVariable(name, String.valueOf(amount));
+            context.setPlayerVariable(name, String.valueOf(amount));
         }
     }
 
     @Override
     public ActionType getActionType() {
-        return ActionType.ADD_VARIABLE;
+        return ActionType.ADD_PLAYER_VARIABLE;
     }
 
     @Override
     public String serialize() {
-        return "add_variable " + name + " " + amount;
+        return "add_player_variable " + name + " " + amount;
     }
 
-    public static AddVariableAction parse(String line) {
+    public static AddPlayerVariableAction parse(String line) {
         String[] parts = line.split("\\s+");
-        if (parts.length != 3 || !parts[0].equalsIgnoreCase("add_variable")) return null;
+        if (parts.length != 3 || !parts[0].equalsIgnoreCase("add_player_variable")) return null;
         try {
-            return new AddVariableAction(parts[1], Double.parseDouble(parts[2]));
+            return new AddPlayerVariableAction(parts[1], Double.parseDouble(parts[2]));
         } catch (NumberFormatException e) {
             return null;
         }

@@ -1,5 +1,6 @@
 package com.darksoldier1404.dppc.plugin.commands;
 
+import com.darksoldier1404.dppc.api.inventory.PageToolEditor;
 import com.darksoldier1404.dppc.builder.command.ArgumentIndex;
 import com.darksoldier1404.dppc.builder.command.ArgumentType;
 import com.darksoldier1404.dppc.builder.command.CommandBuilder;
@@ -19,6 +20,13 @@ public class DPPCDICommand {
                     plugin.getConfig().set("Settings.DInventory.defaultPageToolItem." + type, sender.getInventory().getItemInMainHand());
                     plugin.saveConfig();
                     sender.sendMessage("§aDefault page tool item has been successfully set to " + type + "!");
+                    return true;
+                }));
+
+        builder.beginSubCommand("edit", "/dppcdi edit")
+                .withPermission("dppc.admin")
+                .executesPlayer(((sender, args) -> {
+                    new PageToolEditor().open(sender);
                     return true;
                 }));
 

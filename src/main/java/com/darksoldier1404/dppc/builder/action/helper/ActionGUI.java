@@ -202,15 +202,29 @@ public class ActionGUI {
             case CLEAR_EFFECTS: return Material.MILK_BUCKET;
             case GIVE_ITEM: return Material.CHEST;
             case TAKE_ITEM: return Material.TRAPPED_CHEST;
-            case SET_VARIABLE: return Material.BOOK;
-            case ADD_VARIABLE: return Material.WRITABLE_BOOK;
-            case RANDOM_NUMBER: return Material.NETHER_STAR;
+            case SET_TEMP_VARIABLE: return Material.BOOK;
+            case ADD_TEMP_VARIABLE: return Material.WRITABLE_BOOK;
+            case RANDOM_TEMP_NUMBER: return Material.NETHER_STAR;
+            case SET_PLAYER_VARIABLE:
+            case ADD_PLAYER_VARIABLE:
+            case RANDOM_PLAYER_NUMBER: return Material.PLAYER_HEAD;
+            case SET_GLOBAL_VARIABLE:
+            case ADD_GLOBAL_VARIABLE:
+            case RANDOM_GLOBAL_NUMBER: return Material.BEACON;
             case IF_HAS_PERMISSION:
             case IF_NOT_PERMISSION: return Material.GOLDEN_APPLE;
-            case IF_VARIABLE_EQUALS:
-            case IF_VARIABLE_NOT_EQUALS:
-            case IF_VARIABLE_GREATER:
-            case IF_VARIABLE_LESS: return Material.COMPARATOR;
+            case IF_TEMP_VARIABLE_EQUALS:
+            case IF_TEMP_VARIABLE_NOT_EQUALS:
+            case IF_TEMP_VARIABLE_GREATER:
+            case IF_TEMP_VARIABLE_LESS: return Material.COMPARATOR;
+            case IF_PLAYER_VARIABLE_EQUALS:
+            case IF_PLAYER_VARIABLE_NOT_EQUALS:
+            case IF_PLAYER_VARIABLE_GREATER:
+            case IF_PLAYER_VARIABLE_LESS: return Material.OBSERVER;
+            case IF_GLOBAL_VARIABLE_EQUALS:
+            case IF_GLOBAL_VARIABLE_NOT_EQUALS:
+            case IF_GLOBAL_VARIABLE_GREATER:
+            case IF_GLOBAL_VARIABLE_LESS: return Material.DAYLIGHT_DETECTOR;
             case ELSE: return Material.REPEATER;
             case END_IF: return Material.REDSTONE_TORCH;
             case CANCEL: return Material.BARRIER;
@@ -244,15 +258,29 @@ public class ActionGUI {
             case CLEAR_EFFECTS: return "clear_effects";
             case GIVE_ITEM: return "give_item <material> <amount>";
             case TAKE_ITEM: return "take_item <material> <amount>";
-            case SET_VARIABLE: return "set_variable <name> <value>";
-            case ADD_VARIABLE: return "add_variable <name> <amount>";
-            case RANDOM_NUMBER: return "random_number <name> <min> <max>";
+            case SET_TEMP_VARIABLE: return "set_temp_variable <name> <value>";
+            case ADD_TEMP_VARIABLE: return "add_temp_variable <name> <amount>";
+            case RANDOM_TEMP_NUMBER: return "random_temp_number <name> <min> <max>";
+            case SET_PLAYER_VARIABLE: return "set_player_variable <name> <value>";
+            case ADD_PLAYER_VARIABLE: return "add_player_variable <name> <amount>";
+            case RANDOM_PLAYER_NUMBER: return "random_player_number <name> <min> <max>";
+            case SET_GLOBAL_VARIABLE: return "set_global_variable <name> <value>";
+            case ADD_GLOBAL_VARIABLE: return "add_global_variable <name> <amount>";
+            case RANDOM_GLOBAL_NUMBER: return "random_global_number <name> <min> <max>";
             case IF_HAS_PERMISSION: return "if_has_permission <perm>";
             case IF_NOT_PERMISSION: return "if_not_permission <perm>";
-            case IF_VARIABLE_EQUALS: return "if_variable_equals <name> <value>";
-            case IF_VARIABLE_NOT_EQUALS: return "if_variable_not_equals <name> <value>";
-            case IF_VARIABLE_GREATER: return "if_variable_greater <name> <num>";
-            case IF_VARIABLE_LESS: return "if_variable_less <name> <num>";
+            case IF_TEMP_VARIABLE_EQUALS: return "if_temp_variable_equals <name> <value>";
+            case IF_TEMP_VARIABLE_NOT_EQUALS: return "if_temp_variable_not_equals <name> <value>";
+            case IF_TEMP_VARIABLE_GREATER: return "if_temp_variable_greater <name> <num>";
+            case IF_TEMP_VARIABLE_LESS: return "if_temp_variable_less <name> <num>";
+            case IF_PLAYER_VARIABLE_EQUALS: return "if_player_variable_equals <name> <value>";
+            case IF_PLAYER_VARIABLE_NOT_EQUALS: return "if_player_variable_not_equals <name> <value>";
+            case IF_PLAYER_VARIABLE_GREATER: return "if_player_variable_greater <name> <num>";
+            case IF_PLAYER_VARIABLE_LESS: return "if_player_variable_less <name> <num>";
+            case IF_GLOBAL_VARIABLE_EQUALS: return "if_global_variable_equals <name> <value>";
+            case IF_GLOBAL_VARIABLE_NOT_EQUALS: return "if_global_variable_not_equals <name> <value>";
+            case IF_GLOBAL_VARIABLE_GREATER: return "if_global_variable_greater <name> <num>";
+            case IF_GLOBAL_VARIABLE_LESS: return "if_global_variable_less <name> <num>";
             case ELSE: return "else";
             case END_IF: return "end_if";
             case CANCEL: return "cancel";

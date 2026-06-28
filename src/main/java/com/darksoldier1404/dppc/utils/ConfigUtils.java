@@ -135,6 +135,7 @@ public class ConfigUtils {
         try {
             File file = new File(plugin.getDataFolder() + "/" + path, fileName + ".yml");
             if (!file.exists()) {
+                file.getParentFile().mkdirs();
                 boolean isCreated = file.createNewFile();
                 if (!isCreated) {
                     log.warning(plugin.getName() + " " + fileName + " file create failed.", DLogManager.printConfigUtilsLogs);
@@ -156,6 +157,7 @@ public class ConfigUtils {
         try {
             File file = new File(plugin.getDataFolder(), fileName + ".yml");
             if (!file.exists()) {
+                file.getParentFile().mkdirs();
                 boolean isCreated = file.createNewFile();
                 if (!isCreated) {
                     log.warning(plugin.getName() + " " + fileName + " file create failed.", DLogManager.printConfigUtilsLogs);

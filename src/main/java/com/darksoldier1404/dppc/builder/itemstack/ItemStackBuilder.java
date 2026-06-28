@@ -15,7 +15,6 @@ import org.bukkit.inventory.meta.LeatherArmorMeta;
 import java.util.*;
 
 @DPPCoreVersion(since = "5.3.1")
-@Beta
 public class ItemStackBuilder {
     private final ItemStack itemStack;
 

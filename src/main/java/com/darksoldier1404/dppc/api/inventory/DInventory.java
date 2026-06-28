@@ -9,7 +9,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.*;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
@@ -410,71 +409,11 @@ public class DInventory implements InventoryHolder, Cloneable {
     @MultiPageOnly
     public void applyDefaultPageTools() {
         if (!useDefaultPageTools || !usePageTools) return;
-        ItemStack[] defaultPageTools = new ItemStack[toolSlots];
-        ItemStack pane = NBT.setStringTag(new ItemStack(org.bukkit.Material.BLACK_STAINED_GLASS_PANE), "dppc_clickcancel", "true");
-        ItemStack customPane = DPPCore.getInstance().getConfig().getItemStack("Settings.DInventory.defaultPageToolItem.PANE");
-        if (customPane != null) {
-            customPane = customPane.clone();
-            pane = NBT.setStringTag(customPane, "dppc_clickcancel", "true");
+        DefaultPageTools.Layout layout = DefaultPageTools.load(DPPCore.getInstance().getConfig());
+        if (layout == null) {
+            layout = DefaultPageTools.defaultSeed(DPPCore.getInstance().getConfig());
         }
-        ItemMeta meta = pane.getItemMeta();
-        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
-        meta.setDisplayName(" ");
-        pane.setItemMeta(meta);
-        ItemStack nextPage = NBT.setStringTag(new ItemStack(org.bukkit.Material.ARROW), "dppc_clickcancel", "true");
-        ItemStack customNext = DPPCore.getInstance().getConfig().getItemStack("Settings.DInventory.defaultPageToolItem.NEXT");
-        if (customNext != null) {
-            customNext = customNext.clone();
-            nextPage = NBT.setStringTag(customNext, "dppc_clickcancel", "true");
-        }
-        nextPage = NBT.setStringTag(nextPage, "dppc_nextpage", "true");
-        ItemMeta nextMeta = nextPage.getItemMeta();
-        if (customNext == null) {
-            nextMeta.setDisplayName("§aNext Page");
-        }
-        nextMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
-        nextPage.setItemMeta(nextMeta);
-        ItemStack prevPage = NBT.setStringTag(new ItemStack(org.bukkit.Material.ARROW), "dppc_clickcancel", "true");
-        ItemStack customPrev = DPPCore.getInstance().getConfig().getItemStack("Settings.DInventory.defaultPageToolItem.PREV");
-        if (customPrev != null) {
-            customPrev = customPrev.clone();
-            prevPage = NBT.setStringTag(customPrev, "dppc_clickcancel", "true");
-        }
-        prevPage = NBT.setStringTag(prevPage, "dppc_prevpage", "true");
-        ItemMeta prevMeta = prevPage.getItemMeta();
-        if (customPrev == null) {
-            prevMeta.setDisplayName("§aPrevious Page");
-        }
-        prevMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
-        prevPage.setItemMeta(prevMeta);
-        ItemStack currentPageItem = NBT.setStringTag(new ItemStack(org.bukkit.Material.PAPER), "dppc_clickcancel", "true");
-        ItemStack customCurrent = DPPCore.getInstance().getConfig().getItemStack("Settings.DInventory.defaultPageToolItem.CURRENT");
-        currentPageItem = NBT.setStringTag(currentPageItem, "dppc_currentpage", "true");
-        if (customCurrent != null) {
-            customCurrent = customCurrent.clone();
-            currentPageItem = NBT.setStringTag(customCurrent, "dppc_clickcancel", "true");
-            currentPageItem = NBT.setStringTag(currentPageItem, "dppc_currentpage", "true");
-        }
-        ItemMeta currentMeta = currentPageItem.getItemMeta();
-        if (customCurrent == null) {
-            currentMeta.setDisplayName("§aCurrent Page: " + (currentPage + 1) + " / " + (pages + 1));
-        } else {
-            String displayName = currentMeta.hasDisplayName() ? currentMeta.getDisplayName() : " ";
-            displayName = displayName.replace("{current}", String.valueOf(currentPage + 1)).replace("{total}", String.valueOf(pages + 1));
-            currentMeta.setDisplayName(displayName);
-        }
-        currentMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
-        currentPageItem.setItemMeta(currentMeta);
-        defaultPageTools[0] = pane; // Slot 0
-        defaultPageTools[1] = prevPage; // Slot 1
-        defaultPageTools[2] = pane; // Slot 2
-        defaultPageTools[3] = pane; // Slot 3
-        defaultPageTools[4] = currentPageItem; // Slot 4
-        defaultPageTools[5] = pane; // Slot 5
-        defaultPageTools[6] = pane; // Slot 6
-        defaultPageTools[7] = nextPage; // Slot 7
-        defaultPageTools[8] = pane; // Slot 8
-        this.pageTools = defaultPageTools;
+        this.pageTools = DefaultPageTools.render(layout, currentPage, pages, toolSlots);
     }
 
     @Override
