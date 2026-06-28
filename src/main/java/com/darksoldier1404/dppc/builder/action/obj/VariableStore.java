@@ -28,7 +28,7 @@ import java.util.UUID;
  * <p>When constructed without a plugin the store is memory-only (no disk I/O),
  * which keeps unit tests free of a real data folder.</p>
  */
-@DPPCoreVersion(since = "5.4.4")
+@DPPCoreVersion(since = "5.4.3")
 public class VariableStore {
     private static final String FOLDER = "variables";
     private static final String PLAYER_FOLDER = "variables/players";
