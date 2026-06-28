@@ -4,11 +4,11 @@ import com.darksoldier1404.dppc.builder.action.obj.Action;
 import com.darksoldier1404.dppc.builder.action.obj.ActionContext;
 import com.darksoldier1404.dppc.builder.action.obj.ActionType;
 
-public class SetVariableAction implements Action {
+public class SetTempVariableAction implements Action {
     private final String name;
     private final String value;
 
-    public SetVariableAction(String name, String value) {
+    public SetTempVariableAction(String name, String value) {
         this.name = name;
         this.value = value;
     }
@@ -20,17 +20,17 @@ public class SetVariableAction implements Action {
 
     @Override
     public ActionType getActionType() {
-        return ActionType.SET_VARIABLE;
+        return ActionType.SET_TEMP_VARIABLE;
     }
 
     @Override
     public String serialize() {
-        return "set_variable " + name + " " + value;
+        return "set_temp_variable " + name + " " + value;
     }
 
-    public static SetVariableAction parse(String line) {
+    public static SetTempVariableAction parse(String line) {
         String[] parts = line.split("\\s+", 3);
-        if (parts.length != 3 || !parts[0].equalsIgnoreCase("set_variable")) return null;
-        return new SetVariableAction(parts[1], parts[2]);
+        if (parts.length != 3 || !parts[0].equalsIgnoreCase("set_temp_variable")) return null;
+        return new SetTempVariableAction(parts[1], parts[2]);
     }
 }

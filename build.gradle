@@ -17,7 +17,7 @@ sonarqube {
 }
 
 group = 'com.darksoldier1404'
-version = '5.4.2'
+version = '5.4.3'
 def isLatest = false
 def V20 = '1.20.1'
 def V21 = '1.21.11'
@@ -33,11 +33,17 @@ repositories {
         name = "nexomcReleases"
         url = uri("https://repo.nexomc.com/releases")
     }
+    maven {
+        name = "papermc"
+        url = uri("https://repo.papermc.io/repository/maven-public/")
+    }
 }
 
 dependencies {
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.3'
+    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.10.3'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.3'
+    testImplementation 'com.github.seeseemelk:MockBukkit-v1.20:3.93.2'
     implementation 'org.jetbrains:annotations:26.0.2'
     compileOnly "com.google.code.gson:gson:2.13.1"
     implementation "com.google.code.gson:gson:2.13.1"

@@ -4,11 +4,11 @@ import com.darksoldier1404.dppc.builder.action.obj.Action;
 import com.darksoldier1404.dppc.builder.action.obj.ActionContext;
 import com.darksoldier1404.dppc.builder.action.obj.ActionType;
 
-public class IfVariableEqualsAction implements Action {
+public class IfTempVariableEqualsAction implements Action {
     private final String name;
     private final String value;
 
-    public IfVariableEqualsAction(String name, String value) {
+    public IfTempVariableEqualsAction(String name, String value) {
         this.name = name;
         this.value = value;
     }
@@ -27,17 +27,17 @@ public class IfVariableEqualsAction implements Action {
 
     @Override
     public ActionType getActionType() {
-        return ActionType.IF_VARIABLE_EQUALS;
+        return ActionType.IF_TEMP_VARIABLE_EQUALS;
     }
 
     @Override
     public String serialize() {
-        return "if_variable_equals " + name + " " + value;
+        return "if_temp_variable_equals " + name + " " + value;
     }
 
-    public static IfVariableEqualsAction parse(String line) {
+    public static IfTempVariableEqualsAction parse(String line) {
         String[] parts = line.split("\\s+", 3);
-        if (parts.length != 3 || !parts[0].equalsIgnoreCase("if_variable_equals")) return null;
-        return new IfVariableEqualsAction(parts[1], parts[2]);
+        if (parts.length != 3 || !parts[0].equalsIgnoreCase("if_temp_variable_equals")) return null;
+        return new IfTempVariableEqualsAction(parts[1], parts[2]);
     }
 }

@@ -251,31 +251,85 @@ public class ActionGUIHandler implements Listener {
                     ag.getActionBuilder().takeItem(ip[0], Integer.parseInt(ip[1]));
                     break;
                 }
-                case SET_VARIABLE: {
+                case SET_TEMP_VARIABLE: {
                     String[] vp = input.split("\\s+", 2);
                     if (vp.length < 2) {
                         p.sendMessage(lang().get("ab.format.variable"));
                         return false;
                     }
-                    ag.getActionBuilder().setVariable(vp[0], vp[1]);
+                    ag.getActionBuilder().setTempVariable(vp[0], vp[1]);
                     break;
                 }
-                case ADD_VARIABLE: {
+                case SET_PLAYER_VARIABLE: {
+                    String[] vp = input.split("\\s+", 2);
+                    if (vp.length < 2) {
+                        p.sendMessage(lang().get("ab.format.variable"));
+                        return false;
+                    }
+                    ag.getActionBuilder().setPlayerVariable(vp[0], vp[1]);
+                    break;
+                }
+                case SET_GLOBAL_VARIABLE: {
+                    String[] vp = input.split("\\s+", 2);
+                    if (vp.length < 2) {
+                        p.sendMessage(lang().get("ab.format.variable"));
+                        return false;
+                    }
+                    ag.getActionBuilder().setGlobalVariable(vp[0], vp[1]);
+                    break;
+                }
+                case ADD_TEMP_VARIABLE: {
                     String[] vp = input.split("\\s+");
                     if (vp.length < 2) {
                         p.sendMessage(lang().get("ab.format.variable_number"));
                         return false;
                     }
-                    ag.getActionBuilder().addVariable(vp[0], Double.parseDouble(vp[1]));
+                    ag.getActionBuilder().addTempVariable(vp[0], Double.parseDouble(vp[1]));
                     break;
                 }
-                case RANDOM_NUMBER: {
+                case ADD_PLAYER_VARIABLE: {
+                    String[] vp = input.split("\\s+");
+                    if (vp.length < 2) {
+                        p.sendMessage(lang().get("ab.format.variable_number"));
+                        return false;
+                    }
+                    ag.getActionBuilder().addPlayerVariable(vp[0], Double.parseDouble(vp[1]));
+                    break;
+                }
+                case ADD_GLOBAL_VARIABLE: {
+                    String[] vp = input.split("\\s+");
+                    if (vp.length < 2) {
+                        p.sendMessage(lang().get("ab.format.variable_number"));
+                        return false;
+                    }
+                    ag.getActionBuilder().addGlobalVariable(vp[0], Double.parseDouble(vp[1]));
+                    break;
+                }
+                case RANDOM_TEMP_NUMBER: {
                     String[] rp = input.split("\\s+");
                     if (rp.length < 3) {
                         p.sendMessage(lang().get("ab.format.random_number"));
                         return false;
                     }
-                    ag.getActionBuilder().randomNumber(rp[0], Integer.parseInt(rp[1]), Integer.parseInt(rp[2]));
+                    ag.getActionBuilder().randomTempNumber(rp[0], Integer.parseInt(rp[1]), Integer.parseInt(rp[2]));
+                    break;
+                }
+                case RANDOM_PLAYER_NUMBER: {
+                    String[] rp = input.split("\\s+");
+                    if (rp.length < 3) {
+                        p.sendMessage(lang().get("ab.format.random_number"));
+                        return false;
+                    }
+                    ag.getActionBuilder().randomPlayerNumber(rp[0], Integer.parseInt(rp[1]), Integer.parseInt(rp[2]));
+                    break;
+                }
+                case RANDOM_GLOBAL_NUMBER: {
+                    String[] rp = input.split("\\s+");
+                    if (rp.length < 3) {
+                        p.sendMessage(lang().get("ab.format.random_number"));
+                        return false;
+                    }
+                    ag.getActionBuilder().randomGlobalNumber(rp[0], Integer.parseInt(rp[1]), Integer.parseInt(rp[2]));
                     break;
                 }
                 case IF_HAS_PERMISSION:
@@ -284,40 +338,112 @@ public class ActionGUIHandler implements Listener {
                 case IF_NOT_PERMISSION:
                     ag.getActionBuilder().ifNotPermission(input);
                     break;
-                case IF_VARIABLE_EQUALS: {
+                case IF_TEMP_VARIABLE_EQUALS: {
                     String[] vp = input.split("\\s+", 2);
                     if (vp.length < 2) {
                         p.sendMessage(lang().get("ab.format.variable"));
                         return false;
                     }
-                    ag.getActionBuilder().ifVariableEquals(vp[0], vp[1]);
+                    ag.getActionBuilder().ifTempVariableEquals(vp[0], vp[1]);
                     break;
                 }
-                case IF_VARIABLE_NOT_EQUALS: {
+                case IF_TEMP_VARIABLE_NOT_EQUALS: {
                     String[] vp = input.split("\\s+", 2);
                     if (vp.length < 2) {
                         p.sendMessage(lang().get("ab.format.variable"));
                         return false;
                     }
-                    ag.getActionBuilder().ifVariableNotEquals(vp[0], vp[1]);
+                    ag.getActionBuilder().ifTempVariableNotEquals(vp[0], vp[1]);
                     break;
                 }
-                case IF_VARIABLE_GREATER: {
+                case IF_TEMP_VARIABLE_GREATER: {
                     String[] vp = input.split("\\s+");
                     if (vp.length < 2) {
                         p.sendMessage(lang().get("ab.format.variable_number"));
                         return false;
                     }
-                    ag.getActionBuilder().ifVariableGreater(vp[0], Double.parseDouble(vp[1]));
+                    ag.getActionBuilder().ifTempVariableGreater(vp[0], Double.parseDouble(vp[1]));
                     break;
                 }
-                case IF_VARIABLE_LESS: {
+                case IF_TEMP_VARIABLE_LESS: {
                     String[] vp = input.split("\\s+");
                     if (vp.length < 2) {
                         p.sendMessage(lang().get("ab.format.variable_number"));
                         return false;
                     }
-                    ag.getActionBuilder().ifVariableLess(vp[0], Double.parseDouble(vp[1]));
+                    ag.getActionBuilder().ifTempVariableLess(vp[0], Double.parseDouble(vp[1]));
+                    break;
+                }
+                case IF_PLAYER_VARIABLE_EQUALS: {
+                    String[] vp = input.split("\\s+", 2);
+                    if (vp.length < 2) {
+                        p.sendMessage(lang().get("ab.format.variable"));
+                        return false;
+                    }
+                    ag.getActionBuilder().ifPlayerVariableEquals(vp[0], vp[1]);
+                    break;
+                }
+                case IF_PLAYER_VARIABLE_NOT_EQUALS: {
+                    String[] vp = input.split("\\s+", 2);
+                    if (vp.length < 2) {
+                        p.sendMessage(lang().get("ab.format.variable"));
+                        return false;
+                    }
+                    ag.getActionBuilder().ifPlayerVariableNotEquals(vp[0], vp[1]);
+                    break;
+                }
+                case IF_PLAYER_VARIABLE_GREATER: {
+                    String[] vp = input.split("\\s+");
+                    if (vp.length < 2) {
+                        p.sendMessage(lang().get("ab.format.variable_number"));
+                        return false;
+                    }
+                    ag.getActionBuilder().ifPlayerVariableGreater(vp[0], Double.parseDouble(vp[1]));
+                    break;
+                }
+                case IF_PLAYER_VARIABLE_LESS: {
+                    String[] vp = input.split("\\s+");
+                    if (vp.length < 2) {
+                        p.sendMessage(lang().get("ab.format.variable_number"));
+                        return false;
+                    }
+                    ag.getActionBuilder().ifPlayerVariableLess(vp[0], Double.parseDouble(vp[1]));
+                    break;
+                }
+                case IF_GLOBAL_VARIABLE_EQUALS: {
+                    String[] vp = input.split("\\s+", 2);
+                    if (vp.length < 2) {
+                        p.sendMessage(lang().get("ab.format.variable"));
+                        return false;
+                    }
+                    ag.getActionBuilder().ifGlobalVariableEquals(vp[0], vp[1]);
+                    break;
+                }
+                case IF_GLOBAL_VARIABLE_NOT_EQUALS: {
+                    String[] vp = input.split("\\s+", 2);
+                    if (vp.length < 2) {
+                        p.sendMessage(lang().get("ab.format.variable"));
+                        return false;
+                    }
+                    ag.getActionBuilder().ifGlobalVariableNotEquals(vp[0], vp[1]);
+                    break;
+                }
+                case IF_GLOBAL_VARIABLE_GREATER: {
+                    String[] vp = input.split("\\s+");
+                    if (vp.length < 2) {
+                        p.sendMessage(lang().get("ab.format.variable_number"));
+                        return false;
+                    }
+                    ag.getActionBuilder().ifGlobalVariableGreater(vp[0], Double.parseDouble(vp[1]));
+                    break;
+                }
+                case IF_GLOBAL_VARIABLE_LESS: {
+                    String[] vp = input.split("\\s+");
+                    if (vp.length < 2) {
+                        p.sendMessage(lang().get("ab.format.variable_number"));
+                        return false;
+                    }
+                    ag.getActionBuilder().ifGlobalVariableLess(vp[0], Double.parseDouble(vp[1]));
                     break;
                 }
                 case CALL_ACTION:

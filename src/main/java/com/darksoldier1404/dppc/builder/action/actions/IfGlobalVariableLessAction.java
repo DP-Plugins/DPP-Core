@@ -4,11 +4,11 @@ import com.darksoldier1404.dppc.builder.action.obj.Action;
 import com.darksoldier1404.dppc.builder.action.obj.ActionContext;
 import com.darksoldier1404.dppc.builder.action.obj.ActionType;
 
-public class IfVariableLessAction implements Action {
+public class IfGlobalVariableLessAction implements Action {
     private final String name;
     private final double threshold;
 
-    public IfVariableLessAction(String name, double threshold) {
+    public IfGlobalVariableLessAction(String name, double threshold) {
         this.name = name;
         this.threshold = threshold;
     }
@@ -18,7 +18,7 @@ public class IfVariableLessAction implements Action {
         boolean result = false;
         if (context.shouldExecute()) {
             try {
-                double val = Double.parseDouble(context.getVariable(name));
+                double val = Double.parseDouble(context.getGlobalVariable(name));
                 result = val < threshold;
             } catch (NumberFormatException ignored) {
             }
@@ -33,19 +33,19 @@ public class IfVariableLessAction implements Action {
 
     @Override
     public ActionType getActionType() {
-        return ActionType.IF_VARIABLE_LESS;
+        return ActionType.IF_GLOBAL_VARIABLE_LESS;
     }
 
     @Override
     public String serialize() {
-        return "if_variable_less " + name + " " + threshold;
+        return "if_global_variable_less " + name + " " + threshold;
     }
 
-    public static IfVariableLessAction parse(String line) {
+    public static IfGlobalVariableLessAction parse(String line) {
         String[] parts = line.split("\\s+");
-        if (parts.length != 3 || !parts[0].equalsIgnoreCase("if_variable_less")) return null;
+        if (parts.length != 3 || !parts[0].equalsIgnoreCase("if_global_variable_less")) return null;
         try {
-            return new IfVariableLessAction(parts[1], Double.parseDouble(parts[2]));
+            return new IfGlobalVariableLessAction(parts[1], Double.parseDouble(parts[2]));
         } catch (NumberFormatException e) {
             return null;
         }

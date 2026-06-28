@@ -4,9 +4,14 @@ import com.darksoldier1404.dppc.api.logger.DLogManager;
 import com.darksoldier1404.dppc.api.placeholder.PlaceholderBuilder;
 import com.darksoldier1404.dppc.builder.action.ActionBuilder;
 import com.darksoldier1404.dppc.builder.action.helper.ActionGUIHandler;
+import com.darksoldier1404.dppc.builder.action.obj.VariableStore;
 import com.darksoldier1404.dppc.data.DPlugin;
 import com.darksoldier1404.dppc.events.DAnvilInventoryListener;
+import com.darksoldier1404.dppc.events.AdminUpdateNotifyListener;
+import com.darksoldier1404.dppc.events.DPPCPPanelListener;
 import com.darksoldier1404.dppc.events.InventoryEventListener;
+import com.darksoldier1404.dppc.events.PageToolEditorListener;
+import com.darksoldier1404.dppc.events.VariableStoreListener;
 import com.darksoldier1404.dppc.plugin.commands.DPPCACommand;
 import com.darksoldier1404.dppc.plugin.commands.DPPCCommand;
 import com.darksoldier1404.dppc.plugin.commands.DPPCDICommand;
@@ -26,6 +31,7 @@ public class DPPCore extends DPlugin {
     public static Plugin lp;
     public static Set<PlaceholderBuilder.InternalExpansion> placeholders = new HashSet<>();
     public static Map<String, ActionBuilder> actions = new HashMap<>();
+    public static VariableStore variables;
 
     public DPPCore() {
         super(true);
@@ -58,9 +64,18 @@ public class DPPCore extends DPlugin {
         PluginUtil.initializeSoftDependPlugins();
         PluginUtil.loadAllAction();
         PluginUtil.initPlaceholders();
+        variables = new VariableStore(this);
+        variables.loadGlobal();
+        for (org.bukkit.entity.Player pl : getServer().getOnlinePlayers()) {
+            variables.loadPlayer(pl.getUniqueId());
+        }
         getServer().getPluginManager().registerEvents(new ActionGUIHandler(), this);
+        getServer().getPluginManager().registerEvents(new VariableStoreListener(), this);
         getServer().getPluginManager().registerEvents(new InventoryEventListener(), this);
         getServer().getPluginManager().registerEvents(new DAnvilInventoryListener(), this);
+        getServer().getPluginManager().registerEvents(new PageToolEditorListener(), this);
+        getServer().getPluginManager().registerEvents(new DPPCPPanelListener(), this);
+        getServer().getPluginManager().registerEvents(new AdminUpdateNotifyListener(), this);
         getCommand("dppc").setExecutor(new DPPCCommand());
         getCommand("dppca").setExecutor(new DPPCACommand());
         getCommand("dppcp").setExecutor(new DPPCPCommand().getExecutor());
@@ -71,6 +86,9 @@ public class DPPCore extends DPlugin {
     @Override
     public void onDisable() {
         DLogManager.saveIntegratedLog();
+        if (variables != null) {
+            variables.saveAll();
+        }
         saveAllData();
     }
 }

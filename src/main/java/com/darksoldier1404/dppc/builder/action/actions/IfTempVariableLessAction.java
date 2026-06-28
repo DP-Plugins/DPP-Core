@@ -4,11 +4,11 @@ import com.darksoldier1404.dppc.builder.action.obj.Action;
 import com.darksoldier1404.dppc.builder.action.obj.ActionContext;
 import com.darksoldier1404.dppc.builder.action.obj.ActionType;
 
-public class IfVariableGreaterAction implements Action {
+public class IfTempVariableLessAction implements Action {
     private final String name;
     private final double threshold;
 
-    public IfVariableGreaterAction(String name, double threshold) {
+    public IfTempVariableLessAction(String name, double threshold) {
         this.name = name;
         this.threshold = threshold;
     }
@@ -19,7 +19,7 @@ public class IfVariableGreaterAction implements Action {
         if (context.shouldExecute()) {
             try {
                 double val = Double.parseDouble(context.getVariable(name));
-                result = val > threshold;
+                result = val < threshold;
             } catch (NumberFormatException ignored) {
             }
         }
@@ -33,19 +33,19 @@ public class IfVariableGreaterAction implements Action {
 
     @Override
     public ActionType getActionType() {
-        return ActionType.IF_VARIABLE_GREATER;
+        return ActionType.IF_TEMP_VARIABLE_LESS;
     }
 
     @Override
     public String serialize() {
-        return "if_variable_greater " + name + " " + threshold;
+        return "if_temp_variable_less " + name + " " + threshold;
     }
 
-    public static IfVariableGreaterAction parse(String line) {
+    public static IfTempVariableLessAction parse(String line) {
         String[] parts = line.split("\\s+");
-        if (parts.length != 3 || !parts[0].equalsIgnoreCase("if_variable_greater")) return null;
+        if (parts.length != 3 || !parts[0].equalsIgnoreCase("if_temp_variable_less")) return null;
         try {
-            return new IfVariableGreaterAction(parts[1], Double.parseDouble(parts[2]));
+            return new IfTempVariableLessAction(parts[1], Double.parseDouble(parts[2]));
         } catch (NumberFormatException e) {
             return null;
         }

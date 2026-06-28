@@ -4,11 +4,11 @@ import com.darksoldier1404.dppc.builder.action.obj.Action;
 import com.darksoldier1404.dppc.builder.action.obj.ActionContext;
 import com.darksoldier1404.dppc.builder.action.obj.ActionType;
 
-public class IfVariableNotEqualsAction implements Action {
+public class IfGlobalVariableEqualsAction implements Action {
     private final String name;
     private final String value;
 
-    public IfVariableNotEqualsAction(String name, String value) {
+    public IfGlobalVariableEqualsAction(String name, String value) {
         this.name = name;
         this.value = value;
     }
@@ -16,7 +16,7 @@ public class IfVariableNotEqualsAction implements Action {
     @Override
     public void execute(ActionContext context) {
         boolean result = context.shouldExecute()
-                && !context.applyVariables(context.getVariable(name)).equals(context.applyVariables(value));
+                && context.applyVariables(context.getGlobalVariable(name)).equals(context.applyVariables(value));
         context.pushCondition(result);
     }
 
@@ -27,17 +27,17 @@ public class IfVariableNotEqualsAction implements Action {
 
     @Override
     public ActionType getActionType() {
-        return ActionType.IF_VARIABLE_NOT_EQUALS;
+        return ActionType.IF_GLOBAL_VARIABLE_EQUALS;
     }
 
     @Override
     public String serialize() {
-        return "if_variable_not_equals " + name + " " + value;
+        return "if_global_variable_equals " + name + " " + value;
     }
 
-    public static IfVariableNotEqualsAction parse(String line) {
+    public static IfGlobalVariableEqualsAction parse(String line) {
         String[] parts = line.split("\\s+", 3);
-        if (parts.length != 3 || !parts[0].equalsIgnoreCase("if_variable_not_equals")) return null;
-        return new IfVariableNotEqualsAction(parts[1], parts[2]);
+        if (parts.length != 3 || !parts[0].equalsIgnoreCase("if_global_variable_equals")) return null;
+        return new IfGlobalVariableEqualsAction(parts[1], parts[2]);
     }
 }

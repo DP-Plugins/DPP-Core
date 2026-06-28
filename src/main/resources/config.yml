@@ -10,6 +10,38 @@ Settings:
   # Vault       - Force Vault (falls back to EssentialsX if not installed).
   economy-provider: AUTO
 
+  # If true, admins (dppc.admin) are shown a list of outdated plugins 5 seconds after they join.
+  # Set to false to disable this join notification.
+  notify_admins_on_join: true
+
+  DInventory: # Settings for the shared DInventory paging system.
+    # The default page tool bar (the bottom row of paged inventories) is fully editable in-game.
+    # Run "/dppcdi edit" to open a GUI editor where you can place any items in the 9 tool slots
+    # and assign each one a function, then save. Saving writes the layout under
+    # "defaultPageTools.slots" below; until then the classic arrangement (prev=1, current=4, next=7)
+    # is used.
+    #
+    # Each saved slot stores an "item" (the serialized ItemStack shown) and a "role":
+    #   DECORATION - clicks are cancelled, no action (filler).
+    #   PREV       - moves to the previous page.
+    #   NEXT       - moves to the next page.
+    #   CURRENT    - shows the current page; {current} / {total} in the item name are replaced
+    #                with the 1-based page numbers.
+    #
+    # defaultPageTools:
+    #   slots:
+    #     '1': { role: PREV, item: ... }
+    #     '4': { role: CURRENT, item: ... }
+    #     '7': { role: NEXT, item: ... }
+    #
+    # Legacy per-type appearance overrides set via "/dppcdi setdefaultpagetoolitem <TYPE>" remain
+    # supported as the appearance of the classic arrangement when no GUI layout has been saved.
+    # defaultPageToolItem:
+    #   PANE: ...
+    #   NEXT: ...
+    #   PREV: ...
+    #   CURRENT: ...
+
   Log: # Settings for DP-Plugins logging system.
     save_period: 3600  # Time in seconds to save the log file.
     save_integrated: true  # If true, integrated logs will be saved in a single file.
