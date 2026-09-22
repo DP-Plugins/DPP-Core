@@ -22,6 +22,10 @@ def isLatest = false
 def V20 = '1.20.1'
 def V21 = '1.21.11'
 def api_version = isLatest ? V21 : V20
+// DPP-ModCore's wire format, served by the Nexus maven-public group (REPO_PUBLIC) and bundled by shadowJar
+// below. This is the one line to change when the core is released: ModCore Phase 8c publishes 0.1.0 without the
+// SNAPSHOT, and until it does, the snapshot is the only version that resolves.
+def dppmc_protocol_version = "1.0.0"
 
 repositories {
     mavenCentral()
@@ -57,6 +61,10 @@ dependencies {
     compileOnly 'net.milkbowl.vault:Vault:1.7.3@jar'
     compileOnly 'com.nexomc:nexo:1.17.0@jar'
     implementation("net.kyori:adventure-api:4.26.1")
+
+    // DPP-ModCore wire format (design §6.4). Shaded without relocation, so every plugin on the server sees one copy.
+    implementation "com.darksoldier1404.dppmc:dppmc-protocol:${dppmc_protocol_version}"
+    testImplementation testFixtures("com.darksoldier1404.dppmc:dppmc-protocol:${dppmc_protocol_version}")
 
     compileOnly 'com.bukkit:craftbukkit:' + api_version
     compileOnly 'com.bukkit:spigot:' + api_version
@@ -94,6 +102,7 @@ jar {
 shadowJar {
     dependencies {
         include(dependency('com.google.code.gson:gson:2.13.1'))
+        include(dependency("com.darksoldier1404.dppmc:dppmc-protocol"))
     }
     archiveFileName.set("DPP-Core-${version}-SNAPSHOT.jar")
     destinationDirectory.set(file("$rootDir/jars"))

@@ -12,6 +12,7 @@ import com.darksoldier1404.dppc.events.DPPCPPanelListener;
 import com.darksoldier1404.dppc.events.InventoryEventListener;
 import com.darksoldier1404.dppc.events.PageToolEditorListener;
 import com.darksoldier1404.dppc.events.VariableStoreListener;
+import com.darksoldier1404.dppc.modbridge.ModBridge;
 import com.darksoldier1404.dppc.plugin.commands.DPPCACommand;
 import com.darksoldier1404.dppc.plugin.commands.DPPCCommand;
 import com.darksoldier1404.dppc.plugin.commands.DPPCDICommand;
@@ -80,11 +81,13 @@ public class DPPCore extends DPlugin {
         getCommand("dppca").setExecutor(new DPPCACommand());
         getCommand("dppcp").setExecutor(new DPPCPCommand().getExecutor());
         DPPCDICommand.init();
+        ModBridge.enable(this);
         PluginUtil.showBanner();
     }
 
     @Override
     public void onDisable() {
+        ModBridge.disable();
         DLogManager.saveIntegratedLog();
         if (variables != null) {
             variables.saveAll();
