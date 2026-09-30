@@ -7,6 +7,7 @@ import com.darksoldier1404.dppc.builder.action.obj.ActionContext;
 import com.darksoldier1404.dppc.data.DPlugin;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -198,6 +199,11 @@ public class ActionBuilder {
         return this;
     }
 
+    public ActionBuilder takeMatchedItem(ItemStack item) {
+        update(new TakeMatchedItemAction(item));
+        return this;
+    }
+
     // --- Variables (Temporary) ---
 
     public ActionBuilder setTempVariable(String name, String value) {
@@ -250,6 +256,16 @@ public class ActionBuilder {
     }
 
     // --- Conditions ---
+
+    public ActionBuilder ifHasItem(ItemStack item) {
+        update(new IfHasItemAction(item));
+        return this;
+    }
+
+    public ActionBuilder ifHasMaterial(String material, int amount) {
+        update(new IfHasMaterialAction(material, amount));
+        return this;
+    }
 
     public ActionBuilder ifHasPermission(String permission) {
         update(new IfHasPermissionAction(permission));
@@ -400,6 +416,9 @@ public class ActionBuilder {
         if ((a = SetGlobalVariableAction.parse(line)) != null) return a;
         if ((a = AddGlobalVariableAction.parse(line)) != null) return a;
         if ((a = RandomGlobalNumberAction.parse(line)) != null) return a;
+        if ((a = TakeMatchedItemAction.parse(line)) != null) return a;
+        if ((a = IfHasItemAction.parse(line)) != null) return a;
+        if ((a = IfHasMaterialAction.parse(line)) != null) return a;
         if ((a = IfHasPermissionAction.parse(line)) != null) return a;
         if ((a = IfNotPermissionAction.parse(line)) != null) return a;
         if ((a = IfTempVariableEqualsAction.parse(line)) != null) return a;

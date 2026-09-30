@@ -23,6 +23,7 @@ ab: # ActionBuilder
       list: "/dppca list - 모든 액션 목록"
       view: "/dppca view <이름> - 액션 스크립트 보기"
       test: "/dppca test <이름> - 액션 테스트"
+      testsudo: "/dppca testsudo <이름> - 액션 테스트 (모든 유저 사용 가능)"
       reload: "/dppca reload - 모든 액션 리로드"
     usage:
       create: "&c사용법: /dppca create <이름>"
@@ -30,6 +31,7 @@ ab: # ActionBuilder
       delete: "&c사용법: /dppca delete <이름>"
       view: "&c사용법: /dppca view <이름>"
       test: "&c사용법: /dppca test <이름>"
+      testsudo: "&c사용법: /dppca testsudo <이름>"
     already_exists: "&c이미 같은 이름의 액션이 존재합니다!"
     not_found: "&c해당 이름의 액션을 찾을 수 없습니다!"
     deleted: "&a액션이 삭제되었습니다!"
@@ -40,6 +42,9 @@ ab: # ActionBuilder
   gui:
     title: "&8[ &6액션 빌더 &8] &7{0}"
     select_title: "&8[ &6액션 타입 선택 &8]"
+    item_register_title: "&8[ &6아이템 등록 &8]"
+    confirm: "&a✔ 확인"
+    cancel: "&c✖ 취소"
     edit_lore: "&a좌클릭 &7- 편집"
     remove_lore: "&c우클릭 &7- 제거"
     prev_page: "&e◄ 이전 페이지"
@@ -55,6 +60,7 @@ ab: # ActionBuilder
     unsupported_input: "&c지원하지 않는 입력 형식입니다."
     invalid_number: "&c숫자 형식이 올바르지 않습니다: {0}"
     error: "&c오류: {0}"
+    item_register_empty: "&c등록할 아이템을 슬롯에 놓아주세요."
   format:
     teleport: "&c형식: <월드명> <x,y,z>"
     coords: "&c좌표 형식: x,y,z"
@@ -111,3 +117,4 @@ ab: # ActionBuilder
     if_global_variable_greater: "&7비교할 전역 저장 변수와 기준값을 입력하세요. &8(형식: &f변수명 숫자&8, 클 때 실행)"
     if_global_variable_less: "&7비교할 전역 저장 변수와 기준값을 입력하세요. &8(형식: &f변수명 숫자&8, 작을 때 실행)"
     call_action: "&7호출할 액션 이름을 입력하세요."
+    if_has_material: "&7확인할 메테리얼과 개수를 입력하세요. &8(형식: &f메테리얼명 개수&8)"

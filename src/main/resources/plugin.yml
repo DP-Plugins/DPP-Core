@@ -1,9 +1,14 @@
 name: DPP-Core
-version: 5.4.3
+version: 5.5.0
 description: All DP-PLUGINS plugins require this plugin.
 main: com.darksoldier1404.dppc.DPPCore
 authors: [ DEAD_POOLIO_ ]
 api-version: 1.20
+libraries:
+  - com.zaxxer:HikariCP:5.1.0
+  - org.mariadb.jdbc:mariadb-java-client:3.4.1
+  - org.xerial:sqlite-jdbc:3.46.1.3
+  - redis.clients:jedis:5.2.0
 loadbefore:
   - PlaceholderAPI
 softdepend:
@@ -18,3 +23,9 @@ commands:
   dppca:
   dppcp:
   dppcdi:
+  dppcloc:
+    description: Visually test LocationUtil functions with particles.
+    usage: /dppcloc <function> [args...] [PARTICLE]
+  dppcpacket:
+    description: Manually test the ProtocolLib-backed packet API (requires ProtocolLib).
+    usage: /dppcpacket <fakeblock|team|sound> [args...]

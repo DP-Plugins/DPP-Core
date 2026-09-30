@@ -3,12 +3,19 @@ package com.darksoldier1404.dppc.data;
 import com.darksoldier1404.dppc.annotation.DPPCoreVersion;
 import com.darksoldier1404.dppc.api.logger.DLogManager;
 import com.darksoldier1404.dppc.api.logger.DLogNode;
-import com.darksoldier1404.dppc.utils.ConfigUtils;
+import com.darksoldier1404.dppc.data.storage.StorageBackend;
+import com.darksoldier1404.dppc.data.storage.StorageSettings;
+import com.darksoldier1404.dppc.data.sync.SyncManager;
+import com.darksoldier1404.dppc.data.sync.SyncOp;
+import com.darksoldier1404.dppc.data.sync.SyncReceiver;
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
+import java.util.function.Consumer;
 
 /**
  * A type-safe container for managing a single piece of data in a Bukkit plugin.
@@ -26,35 +33,102 @@ public class SingleDataContainer<K, V> implements IDataHandler<K, V> {
     private final DPlugin plugin;
     private final DataType dataType;
     private final DLogNode logger;
+    private final StorageBackend backend;
     private String path;
     private K key;
     private V value;
 
+    // Real-time sync (optional). Null when sync is disabled.
+    private final SyncManager syncManager;
+    private final String syncSignature;
+    private final String containerId;
+    private volatile Class<?> lastClazz;
+
     /**
-     * Constructs a SingleDataContainer with the specified plugin and data type.
+     * Constructs a file-backed SingleDataContainer with the specified plugin and data type.
      *
      * @param plugin   The JavaPlugin instance.
      * @param dataType The type of data to manage (USER, YAML, or CUSTOM).
      */
     public SingleDataContainer(DPlugin plugin, DataType dataType) {
-        this.plugin = plugin;
-        this.dataType = dataType;
-        this.logger = plugin.getLog();
-        this.path = dataType == DataType.USER ? "udata" : "data";
-        this.key = null;
-        this.value = null;
+        this(plugin, dataType, (String) null, StorageSettings.fileOnly());
     }
 
     /**
-     * Constructs a SingleDataContainer with a custom path.
+     * Constructs a file-backed SingleDataContainer with a custom path.
      *
      * @param plugin   The JavaPlugin instance.
      * @param dataType The type of data to manage (USER, YAML, or CUSTOM).
      * @param path     The custom directory path for data storage.
      */
     public SingleDataContainer(DPlugin plugin, DataType dataType, String path) {
-        this(plugin, dataType);
-        this.path = path != null ? path : this.path;
+        this(plugin, dataType, path, StorageSettings.fileOnly());
+    }
+
+    /**
+     * Constructs a SingleDataContainer with explicit storage settings, using the
+     * default path for the data type.
+     *
+     * @param plugin   The JavaPlugin instance.
+     * @param dataType The type of data to manage (USER, YAML, or CUSTOM).
+     * @param settings The storage settings (file only, database only, or both).
+     */
+    @DPPCoreVersion(since = "5.4.4")
+    public SingleDataContainer(DPlugin plugin, DataType dataType, StorageSettings settings) {
+        this(plugin, dataType, null, settings);
+    }
+
+    /**
+     * Constructs a SingleDataContainer with a custom path and explicit storage settings.
+     *
+     * @param plugin   The JavaPlugin instance.
+     * @param dataType The type of data to manage (USER, YAML, or CUSTOM).
+     * @param path     The custom directory path (also the DB table / Redis key suffix).
+     * @param settings The storage settings (file only, database only, or both).
+     */
+    @DPPCoreVersion(since = "5.4.4")
+    public SingleDataContainer(DPlugin plugin, DataType dataType, String path, StorageSettings settings) {
+        this.plugin = plugin;
+        this.dataType = dataType;
+        this.logger = plugin.getLog();
+        this.path = path != null ? path : (dataType == DataType.USER ? "udata" : "data");
+        this.backend = settings.createBackend(plugin, this::getPath, this.path);
+        this.key = null;
+        this.value = null;
+        this.containerId = plugin.getName() + ":single:" + this.path;
+        if (settings.isSyncEnabled()) {
+            this.syncSignature = settings.syncSignature();
+            SyncManager mgr = null;
+            try {
+                mgr = SyncManager.shared(syncSignature, () -> settings.createSyncTransport(plugin));
+                mgr.register(containerId, new SyncReceiver() {
+                    @Override
+                    public void onRemoteChange(@NotNull String k, @NotNull SyncOp op) {
+                        applyRemoteChange(k, op);
+                    }
+
+                    @Override
+                    public void onResync() {
+                        applyResync();
+                    }
+                });
+            } catch (Exception e) {
+                logger.warning("Failed to enable sync for " + containerId + ": " + e.getMessage(), DLogManager.printStorageLogs);
+                mgr = null;
+            }
+            this.syncManager = mgr;
+        } else {
+            this.syncSignature = null;
+            this.syncManager = null;
+        }
+    }
+
+    /**
+     * @return the storage backend this container persists through.
+     */
+    @DPPCoreVersion(since = "5.4.4")
+    public StorageBackend getBackend() {
+        return backend;
     }
 
     @Override
@@ -194,17 +268,28 @@ public class SingleDataContainer<K, V> implements IDataHandler<K, V> {
             logger.warning(e.getMessage(), DLogManager.printDataContainerLogs);
             return;
         }
-        String savePath = path;
+        String yaml = serializeToString(value, key);
+        if (yaml == null) {
+            return;
+        }
+        backend.save(fileName, yaml);
+        publishSync(fileName, SyncOp.UPSERT);
+    }
+
+    /**
+     * Serializes the value to a YAML string, or returns {@code null} (and logs) if
+     * the value cannot be represented as a YamlConfiguration.
+     */
+    private String serializeToString(V value, K key) {
         if (dataType == DataType.CUSTOM) {
             Object serialized = ((DataCargo) value).serialize();
             if (!(serialized instanceof YamlConfiguration)) {
                 logger.warning("Serialized data is not a YamlConfiguration for key: " + key, DLogManager.printDataContainerLogs);
-                return;
+                return null;
             }
-            ConfigUtils.saveCustomData(plugin, (YamlConfiguration) serialized, fileName, savePath);
-        } else {
-            ConfigUtils.saveCustomData(plugin, (YamlConfiguration) value, fileName, savePath);
+            return ((YamlConfiguration) serialized).saveToString();
         }
+        return ((YamlConfiguration) value).saveToString();
     }
 
     /**
@@ -231,6 +316,7 @@ public class SingleDataContainer<K, V> implements IDataHandler<K, V> {
      */
     public SingleDataContainer<K, V> load(K key, Class<?> clazz) {
         this.key = key; // Set the key
+        this.lastClazz = clazz;
         String fileName;
         try {
             fileName = getFileName(key);
@@ -238,9 +324,16 @@ public class SingleDataContainer<K, V> implements IDataHandler<K, V> {
             logger.warning(e.getMessage(), DLogManager.printDataContainerLogs);
             return this;
         }
-        String loadPath = path;
-        YamlConfiguration data = ConfigUtils.loadCustomData(plugin, fileName, loadPath);
-        if (data == null) {
+        String yaml = backend.load(fileName);
+        if (yaml == null) {
+            this.value = null;
+            return this;
+        }
+        YamlConfiguration data = new YamlConfiguration();
+        try {
+            data.loadFromString(yaml);
+        } catch (Exception e) {
+            logger.warning("Failed to parse stored data for key " + key + ": " + e.getMessage(), DLogManager.printDataContainerLogs);
             this.value = null;
             return this;
         }
@@ -298,5 +391,186 @@ public class SingleDataContainer<K, V> implements IDataHandler<K, V> {
             logger.warning("Cannot loadAll: No key set for SingleDataContainer with path '" + path + "'", DLogManager.printDataContainerLogs);
         }
         return this;
+    }
+
+    /**
+     * Atomically read-modify-writes the value for {@code key} (optimistic CAS in
+     * the backend). The {@code mutator} mutates the current value (or a fresh
+     * instance if absent) in place; it must be side-effect free as it may run
+     * multiple times. Throw {@link DataContainer.AbortTransactionException} to cancel.
+     *
+     * @return the committed value, or {@code null} if aborted/failed
+     */
+    @DPPCoreVersion(since = "5.4.4")
+    @Nullable
+    public V compute(K key, Class<V> clazz, Consumer<V> mutator) {
+        this.key = key;
+        this.lastClazz = clazz;
+        String fileName;
+        try {
+            fileName = getFileName(key);
+        } catch (IllegalArgumentException e) {
+            logger.warning(e.getMessage(), DLogManager.printDataContainerLogs);
+            return null;
+        }
+        final Object[] committed = new Object[1];
+        String resultYaml = backend.compute(fileName, currentYaml -> {
+            committed[0] = null;
+            V v = materialize(currentYaml, clazz);
+            if (v == null) {
+                return null;
+            }
+            try {
+                mutator.accept(v);
+            } catch (DataContainer.AbortTransactionException abort) {
+                return null;
+            }
+            committed[0] = v;
+            return serializeToString(v, key);
+        });
+        if (resultYaml == null || committed[0] == null) {
+            return null;
+        }
+        @SuppressWarnings("unchecked")
+        V finalValue = (V) committed[0];
+        this.value = finalValue;
+        publishSync(fileName, SyncOp.UPSERT);
+        return finalValue;
+    }
+
+    @SuppressWarnings("unchecked")
+    private V materialize(String yaml, Class<V> clazz) {
+        if (dataType == DataType.CUSTOM) {
+            try {
+                DataCargo cargo = (DataCargo) clazz.getDeclaredConstructor().newInstance();
+                if (yaml == null) {
+                    return (V) cargo;
+                }
+                YamlConfiguration data = new YamlConfiguration();
+                data.loadFromString(yaml);
+                Object v = cargo.deserialize(data);
+                return clazz.isInstance(v) ? (V) v : null;
+            } catch (Exception e) {
+                logger.warning("compute: failed to materialize CUSTOM value: " + e.getMessage(), DLogManager.printDataContainerLogs);
+                return null;
+            }
+        }
+        YamlConfiguration data = new YamlConfiguration();
+        if (yaml != null) {
+            try {
+                data.loadFromString(yaml);
+            } catch (Exception e) {
+                logger.warning("compute: failed to parse stored value: " + e.getMessage(), DLogManager.printDataContainerLogs);
+                return null;
+            }
+        }
+        return (V) data;
+    }
+
+    private void publishSync(String keyStr, SyncOp op) {
+        if (syncManager != null) {
+            syncManager.publish(containerId, keyStr, op);
+        }
+    }
+
+    /** Applies a change made on another server (subscriber thread -> main thread apply). */
+    void applyRemoteChange(@NotNull String keyStr, @NotNull SyncOp op) {
+        String mine = (key == null) ? null : keyToFileName(key);
+        if (mine != null && !mine.equals(keyStr)) {
+            return; // not the key this container tracks
+        }
+        if (op == SyncOp.DELETE) {
+            runOnMain(() -> this.value = null);
+            return;
+        }
+        String yaml = backend.load(keyStr);
+        if (yaml == null) {
+            runOnMain(() -> this.value = null);
+            return;
+        }
+        Object built = buildValue(yaml);
+        if (built == null) {
+            return;
+        }
+        final K k = keyFromString(keyStr);
+        @SuppressWarnings("unchecked")
+        final V v = (V) built;
+        runOnMain(() -> {
+            this.key = k;
+            this.value = v;
+        });
+    }
+
+    void applyResync() {
+        if (key == null) {
+            return;
+        }
+        final K k = key;
+        final Class<?> clazz = lastClazz;
+        runOnMain(() -> load(k, clazz));
+    }
+
+    private String keyToFileName(K key) {
+        try {
+            return getFileName(key);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    private Object buildValue(String yaml) {
+        YamlConfiguration data = new YamlConfiguration();
+        try {
+            data.loadFromString(yaml);
+        } catch (Exception e) {
+            return null;
+        }
+        if (dataType == DataType.CUSTOM) {
+            Class<?> clazz = lastClazz;
+            if (clazz == null || !DataCargo.class.isAssignableFrom(clazz)) {
+                logger.warning("Cannot apply remote CUSTOM change for " + containerId + ": value class unknown", DLogManager.printDataContainerLogs);
+                return null;
+            }
+            try {
+                DataCargo cargo = (DataCargo) clazz.getDeclaredConstructor().newInstance();
+                Object v = cargo.deserialize(data);
+                return clazz.isInstance(v) ? v : null;
+            } catch (Exception e) {
+                return null;
+            }
+        }
+        return data;
+    }
+
+    @SuppressWarnings("unchecked")
+    private K keyFromString(String strKey) {
+        if (dataType == DataType.USER) {
+            return (K) UUID.fromString(strKey);
+        }
+        try {
+            return (K) UUID.fromString(strKey);
+        } catch (IllegalArgumentException e) {
+            return (K) strKey;
+        }
+    }
+
+    private void runOnMain(Runnable task) {
+        if (Bukkit.isPrimaryThread()) {
+            task.run();
+            return;
+        }
+        try {
+            Bukkit.getScheduler().runTask(plugin, task);
+        } catch (Exception ignored) {
+        }
+    }
+
+    @DPPCoreVersion(since = "5.4.4")
+    @Override
+    public void close() {
+        if (syncManager != null && syncSignature != null) {
+            SyncManager.release(syncSignature, containerId);
+        }
+        backend.close();
     }
 }

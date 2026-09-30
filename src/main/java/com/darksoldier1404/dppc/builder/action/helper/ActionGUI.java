@@ -3,6 +3,8 @@ package com.darksoldier1404.dppc.builder.action.helper;
 import com.darksoldier1404.dppc.DPPCore;
 import com.darksoldier1404.dppc.annotation.DPPCoreVersion;
 import com.darksoldier1404.dppc.builder.action.ActionBuilder;
+import com.darksoldier1404.dppc.builder.action.actions.IfHasItemAction;
+import com.darksoldier1404.dppc.builder.action.actions.TakeMatchedItemAction;
 import com.darksoldier1404.dppc.lang.DLang;
 import com.darksoldier1404.dppc.builder.action.obj.Action;
 import com.darksoldier1404.dppc.builder.action.obj.ActionType;
@@ -154,6 +156,61 @@ public class ActionGUI {
         inv.setItem(53, save);
     }
 
+    public static final int ITEM_REGISTER_SLOT = 13;
+    public static final int ITEM_REGISTER_CONFIRM_SLOT = 15;
+    public static final int ITEM_REGISTER_CANCEL_SLOT = 11;
+
+    private ActionType pendingItemActionType;
+
+    public ActionType getPendingItemActionType() {
+        return pendingItemActionType;
+    }
+
+    public void openItemRegisterGUI(Player p, ActionType type) {
+        this.pendingItemActionType = type;
+
+        DInventory inv = new DInventory(lang().get("ab.gui.item_register_title"), 27, plugin);
+        inv.setChannel(2);
+
+        ItemStack filler = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+        ItemMeta fillerMeta = filler.getItemMeta();
+        fillerMeta.setDisplayName(" ");
+        filler.setItemMeta(fillerMeta);
+        for (int i = 0; i < 27; i++) {
+            inv.setItem(i, filler);
+        }
+
+        ItemStack existing = null;
+        if (actionBuilder.isEditing() && actionBuilder.getCurrentEditIndex() < actionBuilder.getActions().size()) {
+            Action current = actionBuilder.getActions().get(actionBuilder.getCurrentEditIndex());
+            if (current.getActionType() == type) {
+                if (current instanceof IfHasItemAction) {
+                    existing = ((IfHasItemAction) current).getItem().clone();
+                } else if (current instanceof TakeMatchedItemAction) {
+                    existing = ((TakeMatchedItemAction) current).getItem().clone();
+                }
+            }
+        }
+        inv.setItem(ITEM_REGISTER_SLOT, existing);
+
+        ItemStack confirm = new ItemStack(Material.EMERALD);
+        ItemMeta confirmMeta = confirm.getItemMeta();
+        confirmMeta.setDisplayName(lang().get("ab.gui.confirm"));
+        confirm.setItemMeta(confirmMeta);
+        confirm = NBT.setStringTag(confirm, "dppc.itemRegisterAction", "confirm");
+        inv.setItem(ITEM_REGISTER_CONFIRM_SLOT, confirm);
+
+        ItemStack cancel = new ItemStack(Material.BARRIER);
+        ItemMeta cancelMeta = cancel.getItemMeta();
+        cancelMeta.setDisplayName(lang().get("ab.gui.cancel"));
+        cancel.setItemMeta(cancelMeta);
+        cancel = NBT.setStringTag(cancel, "dppc.itemRegisterAction", "cancel");
+        inv.setItem(ITEM_REGISTER_CANCEL_SLOT, cancel);
+
+        inv.setObj(this);
+        inv.openInventory(p);
+    }
+
     public void openActionSelectGUI(Player p) {
         ActionType[] types = ActionType.values();
         int size = (int) Math.ceil(types.length / 9.0) * 9;
@@ -202,6 +259,9 @@ public class ActionGUI {
             case CLEAR_EFFECTS: return Material.MILK_BUCKET;
             case GIVE_ITEM: return Material.CHEST;
             case TAKE_ITEM: return Material.TRAPPED_CHEST;
+            case TAKE_MATCHED_ITEM: return Material.DISPENSER;
+            case IF_HAS_ITEM: return Material.HOPPER;
+            case IF_HAS_MATERIAL: return Material.DROPPER;
             case SET_TEMP_VARIABLE: return Material.BOOK;
             case ADD_TEMP_VARIABLE: return Material.WRITABLE_BOOK;
             case RANDOM_TEMP_NUMBER: return Material.NETHER_STAR;
@@ -258,6 +318,9 @@ public class ActionGUI {
             case CLEAR_EFFECTS: return "clear_effects";
             case GIVE_ITEM: return "give_item <material> <amount>";
             case TAKE_ITEM: return "take_item <material> <amount>";
+            case TAKE_MATCHED_ITEM: return "take_matched_item (register item via GUI)";
+            case IF_HAS_ITEM: return "if_has_item (register item via GUI)";
+            case IF_HAS_MATERIAL: return "if_has_material <material> <amount>";
             case SET_TEMP_VARIABLE: return "set_temp_variable <name> <value>";
             case ADD_TEMP_VARIABLE: return "add_temp_variable <name> <amount>";
             case RANDOM_TEMP_NUMBER: return "random_temp_number <name> <min> <max>";

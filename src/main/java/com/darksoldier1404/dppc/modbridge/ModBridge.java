@@ -87,6 +87,8 @@ public final class ModBridge {
 
         private final JavaPlugin core;
         private final Map<String, ServerChannel> channels = new ConcurrentHashMap<>();
+        /** Per player, shared by every channel: binding more protocols must not multiply what one client may cost. */
+        private final Map<UUID, DecodeBudget> budgets = new ConcurrentHashMap<>();
         private final ServerHandshake handshake;
         private int expireTask = -1;
 
@@ -138,6 +140,12 @@ public final class ModBridge {
             return handshake.isReady(player, namespace);
         }
 
+        /** Charges what decoding {@code frame} can cost to the player's budget; false when it is spent. */
+        boolean charge(UUID player, byte[] frame, long nowMillis) {
+            return budgets.computeIfAbsent(player, id -> new DecodeBudget())
+                    .tryCharge(DecodeBudget.costOf(frame), nowMillis);
+        }
+
         private Map<String, ProtocolSpec> boundSpecs() {
             Map<String, ProtocolSpec> specs = new LinkedHashMap<>();
             channels.forEach((namespace, channel) -> specs.put(namespace, channel.spec()));
@@ -148,9 +156,14 @@ public final class ModBridge {
             if (!player.isOnline()) {
                 return;
             }
+            long now = System.currentTimeMillis();
+            if (!charge(player.getUniqueId(), frame, now)) {
+                core.getLogger().fine("[ModBridge] dropped a hello frame from " + player.getName() + ": over the decode budget");
+                return;
+            }
             Optional<ServerHandshake.Answer> answer;
             try {
-                answer = handshake.accept(player.getUniqueId(), frame, System.currentTimeMillis());
+                answer = handshake.accept(player.getUniqueId(), frame, now);
             } catch (ProtocolException e) {
                 core.getLogger().fine("[ModBridge] dropped a malformed hello from " + player.getName() + ": " + e.getMessage());
                 return;
@@ -203,6 +216,7 @@ public final class ModBridge {
         public void onQuit(PlayerQuitEvent event) {
             UUID id = event.getPlayer().getUniqueId();
             handshake.forget(id);
+            budgets.remove(id);
             channels.values().forEach(channel -> channel.forget(id));
         }
 

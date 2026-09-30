@@ -17,6 +17,7 @@ public class DLogManager {
     public static boolean printDInventoryLogs = false;
     public static boolean printDataContainerLogs = true;
     public static boolean printPluginUtilsLogs = true;
+    public static boolean printStorageLogs = true;
 
     public static DLogNode init(DPlugin plugin) {
         DLogNode logNode = new DLogNode(plugin);

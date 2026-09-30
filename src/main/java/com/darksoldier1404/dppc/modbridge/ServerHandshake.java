@@ -25,8 +25,14 @@ import java.util.function.Supplier;
 
 /**
  * The server half of the {@code dppmc:core} handshake (design §6.2), with no Bukkit types so it is tested
- * directly. A client repeats its hello until answered, so every hello is answered again, but only a changed
+ * directly. A client repeats its hello until answered, so a hello is answered again, but only a changed
  * verdict counts as news for events and kicks.
+ *
+ * <p>This channel is read before any handshake, so anyone can send on it: it reassembles at most
+ * {@link CoreProtocol#MAX_MESSAGE_BYTES} one transfer at a time ({@link CoreProtocol#SERVERBOUND_LIMITS}; the
+ * largest hello, 256 mods with the longest names, is about 135 KB), and answers a player at most once per
+ * {@link #MIN_HELLO_GAP_MILLIS}. A client retries once a second; a faster stream of hellos, alternating versions
+ * to flip a verdict back and forth, would otherwise fire a ready event, and whatever a plugin sends on it, each time.
  */
 final class ServerHandshake {
     /**
@@ -38,10 +44,14 @@ final class ServerHandshake {
                   Map<ModOffer, Verdict> newlyRefused) {
     }
 
+    /** Half the client's retry interval ({@code CoreProtocol.HELLO_INTERVAL_TICKS}, one second). */
+    static final long MIN_HELLO_GAP_MILLIS = 500;
+
     private final Supplier<Map<String, ProtocolSpec>> boundSpecs;
     private final String bridgeVersion;
-    private final FrameDecoder<UUID> decoder = new FrameDecoder<>(FrameLimits.SERVERBOUND);
-    private final FrameEncoder encoder = new FrameEncoder(FrameLimits.CLIENTBOUND);
+    private final FrameDecoder<UUID> decoder = new FrameDecoder<>(CoreProtocol.SERVERBOUND_LIMITS);
+    private final Map<UUID, Long> lastAnswer = new ConcurrentHashMap<>();
+    private final FrameEncoder encoder = new FrameEncoder(CoreProtocol.CLIENTBOUND_LIMITS);
     private final Map<UUID, ModSession> sessions = new ConcurrentHashMap<>();
 
     /** @param boundSpecs the specs bound on this server right now, keyed by namespace */
@@ -51,12 +61,17 @@ final class ServerHandshake {
     }
 
     /**
-     * @return the answer, or empty while a chunked hello is still arriving
+     * @return the answer, or empty while a chunked hello is still arriving or when the player's last hello was
+     *         answered less than {@link #MIN_HELLO_GAP_MILLIS} ago
      * @throws ProtocolException on a malformed frame or message; the caller drops it
      */
     Optional<Answer> accept(UUID player, byte[] frame, long nowMillis) {
         byte[] message = decoder.accept(player, frame, nowMillis);
         if (message == null) {
+            return Optional.empty();
+        }
+        Long last = lastAnswer.get(player);
+        if (last != null && nowMillis - last < MIN_HELLO_GAP_MILLIS) {
             return Optional.empty();
         }
         if (!(CoreProtocol.SPEC.decode(Direction.C2S, message) instanceof Hello hello)) {
@@ -87,6 +102,7 @@ final class ServerHandshake {
             }
         }
         List<byte[]> frames = encoder.encode(CoreProtocol.SPEC.encode(Direction.S2C, ack));
+        lastAnswer.put(player, nowMillis);
         return Optional.of(new Answer(frames, session, newlyReady, newlyRefused));
     }
 
@@ -101,6 +117,7 @@ final class ServerHandshake {
 
     void forget(UUID player) {
         sessions.remove(player);
+        lastAnswer.remove(player);
         decoder.forget(player);
     }
 

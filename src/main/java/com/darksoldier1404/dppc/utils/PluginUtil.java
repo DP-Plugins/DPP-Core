@@ -109,6 +109,7 @@ public class PluginUtil {
         DPPCore.lp = getPluginInstance("LuckPerms", "PermissionAPI", DependPlugin.LuckPerms);
         getPluginInstance("WorldGuard", "WorldGuardAPI", DependPlugin.WorldGuard);
         getPluginInstance("PlaceholderAPI", "PlaceholderUtils", DependPlugin.PlaceholderAPI);
+        getPluginInstance("ProtocolLib", "PacketAPI", DependPlugin.ProtocolLib);
         if (getServer().getPluginManager().getPlugin("Vault") != null) {
             dependPlugins.add(DependPlugin.Vault);
         }

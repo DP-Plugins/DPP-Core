@@ -37,6 +37,7 @@ public enum ActionType {
     // --- Inventory ---
     GIVE_ITEM,
     TAKE_ITEM,
+    TAKE_MATCHED_ITEM,
 
     // --- Variables (Temporary: per-execution only) ---
     SET_TEMP_VARIABLE,
@@ -54,6 +55,8 @@ public enum ActionType {
     RANDOM_GLOBAL_NUMBER,
 
     // --- Conditions ---
+    IF_HAS_ITEM,
+    IF_HAS_MATERIAL,
     IF_HAS_PERMISSION,
     IF_NOT_PERMISSION,
     IF_TEMP_VARIABLE_EQUALS,

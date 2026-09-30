@@ -17,4 +17,12 @@ public interface IDataHandler<K, V> {
     JavaPlugin getPlugin();
 
     DataType getDataType();
+
+    /**
+     * Releases any storage resources (e.g. database connection pools) held by
+     * this handler. Default no-op for file-only handlers.
+     */
+    @DPPCoreVersion(since = "5.4.4")
+    default void close() {
+    }
 }

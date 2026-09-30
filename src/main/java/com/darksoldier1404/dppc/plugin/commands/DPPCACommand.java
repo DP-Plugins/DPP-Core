@@ -19,6 +19,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class DPPCACommand implements CommandExecutor, TabCompleter {
@@ -27,6 +28,14 @@ public class DPPCACommand implements CommandExecutor, TabCompleter {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         DLang lang = plugin.getLang();
+        // testsudo is the one subcommand every player may run; it is handled before the op gate.
+        if (args.length > 0 && args[0].equalsIgnoreCase("testsudo")) {
+            if (!(sender instanceof Player)) {
+                sender.sendMessage(lang.get("g.cmd.player_only"));
+                return false;
+            }
+            return runAction((Player) sender, lang, args, "ab.cmd.usage.testsudo");
+        }
         if (!sender.isOp()) {
             sender.sendMessage(lang.get("g.cmd.permission.denied"));
             return false;
@@ -43,6 +52,7 @@ public class DPPCACommand implements CommandExecutor, TabCompleter {
             sender.sendMessage(lang.get("ab.cmd.help.list"));
             sender.sendMessage(lang.get("ab.cmd.help.view"));
             sender.sendMessage(lang.get("ab.cmd.help.test"));
+            sender.sendMessage(lang.get("ab.cmd.help.testsudo"));
             sender.sendMessage(lang.get("ab.cmd.help.reload"));
             return false;
         }
@@ -118,18 +128,7 @@ public class DPPCACommand implements CommandExecutor, TabCompleter {
             return false;
         }
         if (args[0].equalsIgnoreCase("test")) {
-            if (args.length < 2) {
-                sender.sendMessage(lang.get("ab.cmd.usage.test"));
-                return false;
-            }
-            String name = args[1];
-            if (!DPPCore.actions.containsKey(name)) {
-                sender.sendMessage(lang.get("ab.cmd.not_found"));
-                return false;
-            }
-            ActionBuilder ab = DPPCore.actions.get(name);
-            ab.execute(p);
-            return false;
+            return runAction(p, lang, args, "ab.cmd.usage.test");
         }
         if (args[0].equalsIgnoreCase("reload")) {
             PluginUtil.loadAllAction();
@@ -139,11 +138,29 @@ public class DPPCACommand implements CommandExecutor, TabCompleter {
         return false;
     }
 
+    /** Runs a saved action for the player. Shared by {@code test} (op) and {@code testsudo} (everyone). */
+    private boolean runAction(Player p, DLang lang, String[] args, String usageKey) {
+        if (args.length < 2) {
+            p.sendMessage(lang.get(usageKey));
+            return false;
+        }
+        String name = args[1];
+        if (!DPPCore.actions.containsKey(name)) {
+            p.sendMessage(lang.get("ab.cmd.not_found"));
+            return false;
+        }
+        DPPCore.actions.get(name).execute(p);
+        return false;
+    }
+
     @Nullable
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (args.length == 1) {
-            return Arrays.asList("create", "edit", "delete", "list", "view", "test", "reload");
+            if (!sender.isOp()) {
+                return Collections.singletonList("testsudo");
+            }
+            return Arrays.asList("create", "edit", "delete", "list", "view", "test", "testsudo", "reload");
         }
         if (args.length == 2) {
             return new ArrayList<>(DPPCore.actions.keySet());

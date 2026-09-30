@@ -16,7 +16,9 @@ import com.darksoldier1404.dppc.modbridge.ModBridge;
 import com.darksoldier1404.dppc.plugin.commands.DPPCACommand;
 import com.darksoldier1404.dppc.plugin.commands.DPPCCommand;
 import com.darksoldier1404.dppc.plugin.commands.DPPCDICommand;
+import com.darksoldier1404.dppc.plugin.commands.DPPCLocTestCommand;
 import com.darksoldier1404.dppc.plugin.commands.DPPCPCommand;
+import com.darksoldier1404.dppc.plugin.commands.DPPCPacketTestCommand;
 import com.darksoldier1404.dppc.utils.PluginUtil;
 import org.bukkit.plugin.Plugin;
 
@@ -80,6 +82,8 @@ public class DPPCore extends DPlugin {
         getCommand("dppc").setExecutor(new DPPCCommand());
         getCommand("dppca").setExecutor(new DPPCACommand());
         getCommand("dppcp").setExecutor(new DPPCPCommand().getExecutor());
+        getCommand("dppcloc").setExecutor(new DPPCLocTestCommand());
+        getCommand("dppcpacket").setExecutor(new DPPCPacketTestCommand());
         DPPCDICommand.init();
         ModBridge.enable(this);
         PluginUtil.showBanner();
@@ -93,5 +97,6 @@ public class DPPCore extends DPlugin {
             variables.saveAll();
         }
         saveAllData();
+        closeAllData();
     }
 }

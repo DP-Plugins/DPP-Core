@@ -9,9 +9,11 @@ import com.darksoldier1404.dppmc.protocol.frame.FrameLimits;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
+import java.util.function.BiPredicate;
 import java.util.logging.Level;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
@@ -21,6 +23,8 @@ import org.bukkit.plugin.Plugin;
  * accepted from a player whose client completed the handshake for this protocol.
  */
 public final class ServerChannel {
+    private static final Object GATE = new Object();
+
     private final ModBridge.Runtime runtime;
     private final Plugin plugin;
     private final ProtocolSpec spec;
@@ -28,6 +32,9 @@ public final class ServerChannel {
     private final FrameEncoder encoder = new FrameEncoder(FrameLimits.CLIENTBOUND);
     private final Map<Class<?>, BiConsumer<Player, Object>> handlers = new ConcurrentHashMap<>();
     private volatile ModRequirement requirement = ModRequirement.optional();
+    private volatile BiPredicate<Player, Object> gate = (player, packet) -> true;
+    /** The kinds of failure already logged as a warning; see {@link #reportFailure}. */
+    private final Set<Object> reported = ConcurrentHashMap.newKeySet();
 
     ServerChannel(ModBridge.Runtime runtime, Plugin plugin, ProtocolSpec spec) {
         this.runtime = runtime;
@@ -91,6 +98,23 @@ public final class ServerChannel {
         return runtime.isReady(player.getUniqueId(), spec.namespace());
     }
 
+    /**
+     * Runs after a packet decodes and before its handler, for every C2S packet on this channel.
+     * Returning false drops the packet silently.
+     *
+     * <p>This is where a rate limit belongs. A modified client can send as fast as it likes, and a
+     * check inside each handler is one that a later handler forgets; one gate cannot be forgotten.
+     * It runs on the main thread, so keep it cheap, and note that it sees the decoded packet — the
+     * cost of decoding is already paid. (That cost has its own limit: DPP-Core drops frames past a
+     * per-player decode budget before decoding them.)
+     *
+     * <p>A gate that throws drops the packet. Its first failure is logged as a warning, later ones at FINE,
+     * and the same goes for each packet type's handler.
+     */
+    public void gate(BiPredicate<Player, Object> gate) {
+        this.gate = Objects.requireNonNull(gate, "gate");
+    }
+
     public ModRequirement requirement() {
         return requirement;
     }
@@ -107,9 +131,15 @@ public final class ServerChannel {
         if (!runtime.isReady(id, spec.namespace())) {
             return;
         }
+        long now = System.currentTimeMillis();
+        if (!runtime.charge(id, frame, now)) {
+            plugin.getLogger().fine("dropped a " + spec.channel() + " frame from " + player.getName()
+                    + ": over the decode budget");
+            return;
+        }
         Object packet;
         try {
-            byte[] message = decoder.accept(id, frame, System.currentTimeMillis());
+            byte[] message = decoder.accept(id, frame, now);
             if (message == null) {
                 return;
             }
@@ -120,6 +150,18 @@ public final class ServerChannel {
                     + ": " + e.getMessage());
             return;
         }
+        boolean pass;
+        try {
+            pass = gate.test(player, packet);
+        } catch (RuntimeException e) {
+            // Dropped, as a gate saying no would drop it.
+            reportFailure(GATE, "the gate on " + spec.channel() + " threw on " + packet.getClass().getSimpleName()
+                    + " from " + player.getName() + "; the packet was dropped", e);
+            return;
+        }
+        if (!pass) {
+            return;
+        }
         BiConsumer<Player, Object> handler = handlers.get(packet.getClass());
         if (handler == null) {
             plugin.getLogger().fine("no handler for " + packet.getClass().getSimpleName() + " on " + spec.channel());
@@ -128,8 +170,21 @@ public final class ServerChannel {
         try {
             handler.accept(player, packet);
         } catch (RuntimeException e) {
-            plugin.getLogger().log(Level.WARNING, "error handling " + packet.getClass().getSimpleName() + " from "
+            reportFailure(packet.getClass(), "error handling " + packet.getClass().getSimpleName() + " from "
                     + player.getName(), e);
+        }
+    }
+
+    /**
+     * Logs the first failure of each kind (the gate, or a packet type's handler) as a warning and the rest at FINE.
+     * A client that finds the input which makes plugin code throw can send it with every packet, and a stack trace
+     * per packet would fill the log.
+     */
+    private void reportFailure(Object kind, String message, RuntimeException e) {
+        if (reported.add(kind)) {
+            plugin.getLogger().log(Level.WARNING, message + " (further failures of this kind are logged at FINE)", e);
+        } else {
+            plugin.getLogger().log(Level.FINE, message, e);
         }
     }
 

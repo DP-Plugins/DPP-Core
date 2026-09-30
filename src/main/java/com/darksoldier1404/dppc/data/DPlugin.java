@@ -111,6 +111,21 @@ public class DPlugin extends JavaPlugin {
         }
     }
 
+    /**
+     * Closes every registered data handler, releasing any database connection
+     * pools they hold. Intended to be called from {@code onDisable}.
+     */
+    @DPPCoreVersion(since = "5.4.4")
+    public void closeAllData() {
+        for (Map.Entry<String, IDataHandler<?, ?>> entry : data.entrySet()) {
+            try {
+                entry.getValue().close();
+            } catch (Exception e) {
+                log.warning("Failed to close data handler '" + entry.getKey() + "': " + e.getMessage(), DLogManager.printDataContainerLogs);
+            }
+        }
+    }
+
     @Nullable
     public <K, V, T extends IDataHandler<K, V>> T loadDataContainer(T container) {
         return loadDataContainer(container, null);

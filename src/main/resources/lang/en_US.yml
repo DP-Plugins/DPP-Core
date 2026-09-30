@@ -23,6 +23,7 @@ ab: # ActionBuilder
       list: "/dppca list - List all actions"
       view: "/dppca view <name> - View an action script"
       test: "/dppca test <name> - Test an action"
+      testsudo: "/dppca testsudo <name> - Test an action (usable by any player)"
       reload: "/dppca reload - Reload all actions"
     usage:
       create: "&cUsage: /dppca create <name>"
@@ -30,6 +31,7 @@ ab: # ActionBuilder
       delete: "&cUsage: /dppca delete <name>"
       view: "&cUsage: /dppca view <name>"
       test: "&cUsage: /dppca test <name>"
+      testsudo: "&cUsage: /dppca testsudo <name>"
     already_exists: "&cAn action with this name already exists!"
     not_found: "&cNo action found with this name!"
     deleted: "&aAction deleted successfully!"
@@ -40,6 +42,9 @@ ab: # ActionBuilder
   gui:
     title: "&8[ &6Action Builder &8] &7{0}"
     select_title: "&8[ &6Select Action Type &8]"
+    item_register_title: "&8[ &6Register Item &8]"
+    confirm: "&a✔ Confirm"
+    cancel: "&c✖ Cancel"
     edit_lore: "&aLeft-click &7to edit"
     remove_lore: "&cRight-click &7to remove"
     prev_page: "&e◄ Previous Page"
@@ -55,6 +60,7 @@ ab: # ActionBuilder
     unsupported_input: "&cUnsupported input type."
     invalid_number: "&cInvalid number format: {0}"
     error: "&cError: {0}"
+    item_register_empty: "&cPlease place an item in the slot to register."
   format:
     teleport: "&cFormat: <world> <x,y,z>"
     coords: "&cCoordinate format: x,y,z"
@@ -111,3 +117,4 @@ ab: # ActionBuilder
     if_global_variable_greater: "&7Enter the global-saved variable and threshold to compare. &8(format: &fname number&8, runs when greater)"
     if_global_variable_less: "&7Enter the global-saved variable and threshold to compare. &8(format: &fname number&8, runs when less)"
     call_action: "&7Enter the name of the action to call."
+    if_has_material: "&7Enter the material and amount to check. &8(format: &fmaterial amount&8)"

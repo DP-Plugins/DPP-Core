@@ -17,7 +17,7 @@ sonarqube {
 }
 
 group = 'com.darksoldier1404'
-version = '5.4.3'
+version = '5.5.0'
 def isLatest = false
 def V20 = '1.20.1'
 def V21 = '1.21.11'
@@ -25,7 +25,7 @@ def api_version = isLatest ? V21 : V20
 // DPP-ModCore's wire format, served by the Nexus maven-public group (REPO_PUBLIC) and bundled by shadowJar
 // below. This is the one line to change when the core is released: ModCore Phase 8c publishes 0.1.0 without the
 // SNAPSHOT, and until it does, the snapshot is the only version that resolves.
-def dppmc_protocol_version = "1.0.0"
+def dppmc_protocol_version = "1.1.0"
 
 repositories {
     mavenCentral()
@@ -52,6 +52,15 @@ dependencies {
     compileOnly "com.google.code.gson:gson:2.13.1"
     implementation "com.google.code.gson:gson:2.13.1"
 
+    // Database backends (loaded at runtime via plugin.yml 'libraries:' - not shaded)
+    compileOnly 'com.zaxxer:HikariCP:5.1.0'
+    compileOnly 'org.mariadb.jdbc:mariadb-java-client:3.4.1'
+    compileOnly 'org.xerial:sqlite-jdbc:3.46.1.3'
+    compileOnly 'redis.clients:jedis:5.2.0'
+    // SQLite + HikariCP are exercised by the real-DB backend tests
+    testImplementation 'com.zaxxer:HikariCP:5.1.0'
+    testImplementation 'org.xerial:sqlite-jdbc:3.46.1.3'
+
     compileOnly 'me.clip:placeholderapi:2.11.6@jar'
     compileOnly 'com.earth2me.essentials:EssentialsX:2.22.0@jar'
     compileOnly 'net.luckperms:LuckPerms:5.5.10@jar'
@@ -70,9 +79,19 @@ dependencies {
     compileOnly 'com.bukkit:spigot:' + api_version
 }
 
+java {
+    toolchain {
+        // Paper/Spigot 1.20.1-1.21.x run on Java 21. Without this the jar is compiled at whatever
+        // JDK the build happens to run on, and a jar built on a newer one fails to load with
+        // "Unsupported class file major version" - on the server, not here.
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
 compileJava.options.encoding = 'UTF-8'
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
+    options.release = 21
 }
 
 test {
@@ -101,6 +120,8 @@ jar {
 }
 shadowJar {
     dependencies {
+        // DB backends are no longer shaded - they are declared in plugin.yml's
+        // 'libraries:' block and resolved by the server's runtime library loader.
         include(dependency('com.google.code.gson:gson:2.13.1'))
         include(dependency("com.darksoldier1404.dppmc:dppmc-protocol"))
     }
@@ -114,7 +135,7 @@ publishing {
             groupId = 'com.darksoldier1404.dppc'
             artifactId = "DPP-Core"
             artifact file("$rootDir/jars/DPP-Core-${version}-SNAPSHOT.jar")
-            version = "5.4-SNAPSHOT"
+            version = "5.5-SNAPSHOT"
         }
     }
     repositories {
